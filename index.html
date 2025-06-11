@@ -10,8 +10,32 @@
 <body class="bg-light">
   <div class="container py-4">
     <h1 class="text-center text-dark mb-4">📚 Catálogo de Canais Parceiros</h1>
+
+    <!-- Botão para abrir o painel -->
+    <div class="text-center mb-3">
+      <button id="btnAdmin" class="btn btn-success">➕ Adicionar Canal</button>
+    </div>
+
+    <!-- Formulário oculto inicialmente -->
+    <form id="formAdmin" class="mb-4 p-3 border rounded bg-white" style="display: none;">
+      <div class="mb-2">
+        <input type="text" id="nome" class="form-control" placeholder="Nome do Canal" required>
+      </div>
+      <div class="mb-2">
+        <input type="text" id="descricao" class="form-control" placeholder="Descrição" required>
+      </div>
+      <div class="mb-2">
+        <input type="url" id="url" class="form-control" placeholder="Link do Canal (Telegram)" required>
+      </div>
+      <div class="mb-2">
+        <input type="url" id="imagem" class="form-control" placeholder="Link da Imagem (.jpg, .png)">
+      </div>
+      <button type="submit" class="btn btn-primary w-100">Salvar Canal</button>
+    </form>
+
+    <!-- Catálogo de Cards -->
     <div id="catalogo" class="row g-4">
-      <!-- Cards adicionados via JS -->
+      <!-- Cards via JS -->
     </div>
   </div>
 
