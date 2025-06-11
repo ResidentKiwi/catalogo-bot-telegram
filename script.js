@@ -83,7 +83,7 @@ window.onload = async () => {
   if (window.Telegram?.WebApp) {
     Telegram.WebApp.expand();
   }
-
+  console.log("User ID detectado:", userId);
   const admin = await verificarAdmin(userId);
   if (admin) {
     document.getElementById("adminPanel").classList.remove("d-none");
