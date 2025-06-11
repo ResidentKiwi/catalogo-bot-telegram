@@ -13,7 +13,7 @@ async function verificarAdmin(id) {
   const { data, error } = await supabase
     .from('admins')
     .select('*')
-    .eq('id', id);
+    .eq('id', Number(id));
 
   return data && data.length > 0;
 }
