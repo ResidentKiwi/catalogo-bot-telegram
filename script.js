@@ -54,8 +54,11 @@ const btnAdmin = document.getElementById("btnAdmin");
 const formAdmin = document.getElementById("formAdmin");
 
 btnAdmin.addEventListener("click", () => {
-  formAdmin.style.display = formAdmin.style.display === "none" ? "block" : "none";
-});
+  if (formAdmin.style.display === "" || formAdmin.style.display === "none") {
+  formAdmin.style.display = "block";
+} else {
+  formAdmin.style.display = "none";
+  }
 
 // Envia novo canal
 formAdmin.addEventListener("submit", (e) => {
