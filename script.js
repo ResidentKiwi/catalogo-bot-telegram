@@ -55,21 +55,6 @@ function renderizarCatalogo(canais) {
   });
 }
 
-// Carrega canais da tabela do Supabase
-async function carregarCanais() {
-  const { data, error } = await supabase
-    .from("canais")
-    .select("*")
-    .order("id", { ascending: false });
-
-  if (error) {
-    console.error("Erro ao carregar canais:", error.message);
-    return;
-  }
-
-  renderizarCatalogo(data);
-}
-
 // Adiciona novo canal ao Supabase
 async function adicionarCanal(event) {
   event.preventDefault();
