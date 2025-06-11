@@ -1,28 +1,17 @@
 body {
   font-family: Arial, sans-serif;
-  padding: 20px;
-  background: #f0f0f0;
+  background-color: #f0f0f0;
 }
 
-h1 {
-  color: white;
-  text-align: center;
+.card-img-top {
+  object-fit: cover;
+  height: 180px;
 }
 
-div {
-  list-style: none;
-  padding: 0;
+.card {
+  transition: transform 0.2s ease;
 }
 
-li {
-  background: white;
-  margin: 10px 0;
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px #0002;
-}
-
-a {
-  text-decoration: none;
-  color: #333;
+.card:hover {
+  transform: scale(1.02);
 }
