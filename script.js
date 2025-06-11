@@ -4,6 +4,20 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 // ✅ Correção aqui:
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// Teste manual sem Supabase
+async function carregarCanais() {
+  const canaisTeste = [
+    {
+      nome: "example Honkphill Brasil",
+      descricao: "Este é um canal de teste adicionado manualmente.",
+      url: "http://t.me/+neKcGn4L5Xw2NmIx",
+      imagem: "https://via.placeholder.com/600x300?text=Canal+Exemplo"
+    }
+  ];
+
+  renderizarCatalogo(canaisTeste);
+}
+
 // Obtém dados do usuário via Telegram WebApp
 const telegramUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
 const userId = telegramUser?.id;
