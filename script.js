@@ -1,87 +1,90 @@
-// Recupera dados salvos no localStorage ou usa dados padrão
-const canais = JSON.parse(localStorage.getItem("canais")) || [
-  {
-    nome: "Honk Phill Brasil",
-    url: "http://t.me/+neKcGn4L5Xw2NmIx",
-    imagem: "./imagens/honk.jpg",
-    descricao: "Canal brasileiro sobre Honkai Star Rail e mais!"
-  },
-  {
-    nome: "Defeitos Especiais",
-    url: "http://t.me/+y7LK66DY9ms4NTFh",
-    imagem: "./imagens/defeitos.jpg",
-    descricao: "Conteúdo nonsense, humor e cultura pop."
-  },
-  {
-    nome: "Bostilizando",
-    url: "http://t.me/+Jregy2TuzWoxODcx",
-    imagem: "./imagens/bostil.jpg",
-    descricao: "O melhor (ou pior) do Brasil em forma de memes."
-  }
-];
+const SUPABASE_URL = "https://vcbiaornaidbskwzzvrs.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZjYmlhb3JuYWlkYnNrd3p6dnJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2NjQ5OTksImV4cCI6MjA2NTI0MDk5OX0.Nc3a4WxmRmnAC13S9fw8KkaHi8dNn4qUwUAeO5fHv04";
 
-// Monta os cards
-function renderizarCanais() {
-  const catalogo = document.getElementById("catalogo");
-  catalogo.innerHTML = ""; // limpa para re-renderizar
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Identifica usuário via Telegram WebApp
+const telegramUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+const userId = telegramUser?.id;
+
+// Verifica se é admin
+async function verificarAdmin(id) {
+  const { data, error } = await supabase
+    .from('admins')
+    .select('*')
+    .eq('id', id);
+
+  return data.length > 0;
+}
+
+// Renderiza os cards de canais
+function renderizarCatalogo(canais) {
+  const container = document.getElementById("catalogo");
+  container.innerHTML = "";
 
   canais.forEach(canal => {
     const col = document.createElement("div");
-    col.className = "col-md-4";
+    col.className = "col-md-4 mb-4";
 
     col.innerHTML = `
-      <div class="card h-100 shadow-sm">
+      <div class="card shadow-sm h-100">
         <img src="${canal.imagem}" class="card-img-top" alt="${canal.nome}">
         <div class="card-body d-flex flex-column">
           <h5 class="card-title">${canal.nome}</h5>
-          <p class="card-text">${canal.descricao}</p>
-          <a href="${canal.url}" target="_blank" class="btn btn-outline-primary mt-auto">Acessar canal</a>
+          <p class="card-text flex-grow-1">${canal.descricao}</p>
+          <a href="${canal.url}" target="_blank" class="btn btn-primary mt-auto">🔗 Acessar Canal</a>
         </div>
       </div>
     `;
-
-    catalogo.appendChild(col);
+    container.appendChild(col);
   });
 }
 
-// Salva no localStorage
-function salvarCanais() {
-  localStorage.setItem("canais", JSON.stringify(canais));
-}
+// Carrega os canais do Supabase
+async function carregarCanais() {
+  const { data, error } = await supabase.from("canais").select("*").order('id', { ascending: false });
 
-// Exibe ou oculta o formulário
-const btnAdmin = document.getElementById("btnAdmin");
-const formAdmin = document.getElementById("formAdmin");
-
-btnAdmin.addEventListener("click", () => {
-  if (formAdmin.style.display === "" || formAdmin.style.display === "none") {
-  formAdmin.style.display = "block";
-} else {
-  formAdmin.style.display = "none";
+  if (error) {
+    console.error("Erro ao carregar canais:", error.message);
+    return;
   }
 
-// Envia novo canal
-formAdmin.addEventListener("submit", (e) => {
-  e.preventDefault();
+  renderizarCatalogo(data);
+}
 
-  const novoCanal = {
+// Adiciona novo canal
+async function adicionarCanal(event) {
+  event.preventDefault();
+
+  const canal = {
     nome: document.getElementById("nome").value,
     descricao: document.getElementById("descricao").value,
     url: document.getElementById("url").value,
-    imagem: document.getElementById("imagem").value || "https://via.placeholder.com/300x180.png?text=Sem+Imagem"
+    imagem: document.getElementById("imagem").value
   };
 
-  canais.push(novoCanal);
-  salvarCanais();
-  renderizarCanais();
-  formAdmin.reset();
-  formAdmin.style.display = "none";
-});
+  const { error } = await supabase.from("canais").insert([canal]);
 
-// Renderiza na tela ao carregar
-renderizarCanais();
-
-// Telegram WebApp (opcional)
-if (window.Telegram && Telegram.WebApp) {
-  Telegram.WebApp.expand();
+  if (error) {
+    alert("Erro ao adicionar canal.");
+    console.error(error);
+  } else {
+    document.getElementById("canalForm").reset();
+    carregarCanais();
+  }
 }
+
+// Inicializa a aplicação
+window.onload = async () => {
+  if (window.Telegram?.WebApp) {
+    Telegram.WebApp.expand();
+  }
+
+  const admin = await verificarAdmin(userId);
+  if (admin) {
+    document.getElementById("adminPanel").classList.remove("d-none");
+    document.getElementById("canalForm").addEventListener("submit", adicionarCanal);
+  }
+
+  carregarCanais();
+};
