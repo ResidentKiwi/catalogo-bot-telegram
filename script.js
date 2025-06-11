@@ -1,6 +1,7 @@
 const SUPABASE_URL = "https://vcbiaornaidbskwzzvrs.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZjYmlhb3JuYWlkYnNrd3p6dnJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2NjQ5OTksImV4cCI6MjA2NTI0MDk5OX0.Nc3a4WxmRmnAC13S9fw8KkaHi8dNn4qUwUAeO5fHv04";
 
+// Inicializa cliente Supabase
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Renderiza os canais no catálogo
@@ -50,9 +51,9 @@ async function verificarAdmin(id) {
   }
 
   const { data, error } = await supabase
-    .from('admins')
-    .select('*')
-    .eq('id', numericId);
+    .from("admins")
+    .select("*")
+    .eq("id", numericId);
 
   if (error) {
     alert("Erro ao verificar admin: " + error.message);
@@ -86,34 +87,34 @@ async function adicionarCanal(event) {
   }
 }
 
-// ✅ Inicializa tudo corretamente
+// Inicializa tudo corretamente (único window.onload)
 window.onload = async () => {
-  let userId;
-
-  if (window.Telegram?.WebApp) {
-    Telegram.WebApp.ready();
-    Telegram.WebApp.expand();
-
-    const telegramUser = Telegram.WebApp.initDataUnsafe?.user;
-
-    if (!telegramUser || !telegramUser.id) {
-      console.error("❌ Não foi possível obter o ID do usuário Telegram.");
-      alert("Erro: não foi possível identificar seu usuário Telegram.");
-      return;
-    }
-
-    userId = telegramUser.id;
-    console.log("✅ ID do usuário Telegram:", userId);
-
-    const admin = await verificarAdmin(userId);
-    if (admin) {
-      document.getElementById("adminPanel").classList.remove("d-none");
-      document.getElementById("canalForm").addEventListener("submit", adicionarCanal);
-    }
-
-    carregarCanais();
-  } else {
-    alert("Erro: esta aplicação precisa ser executada dentro do Telegram.");
-    console.error("Telegram WebApp não está disponível.");
+  // Garante que estamos dentro do Telegram WebApp
+  if (!window.Telegram?.WebApp?.initDataUnsafe) {
+    alert("Esta aplicação precisa ser executada dentro do Telegram.");
+    console.error("Telegram WebApp não disponível.");
+    return;
   }
+
+  Telegram.WebApp.ready();
+  Telegram.WebApp.expand();
+
+  // Obtém usuário
+  const telegramUser = Telegram.WebApp.initDataUnsafe.user;
+  if (!telegramUser?.id) {
+    alert("Não foi possível identificar seu usuário Telegram.");
+    console.error("User Telegram inválido:", telegramUser);
+    return;
+  }
+  const userId = telegramUser.id;
+  console.log("✅ ID do usuário Telegram:", userId);
+
+  // Verifica admin e mostra painel
+  if (await verificarAdmin(userId)) {
+    document.getElementById("adminPanel").classList.remove("d-none");
+    document.getElementById("canalForm").addEventListener("submit", adicionarCanal);
+  }
+
+  // Carrega catálogo
+  carregarCanais();
 };
