@@ -4,32 +4,38 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 // ✅ Correção aqui:
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Teste manual sem Supabase
-async function carregarCanais() {
-  const canaisTeste = [
-    {
-      nome: "example Honkphill Brasil",
-      descricao: "Este é um canal de teste adicionado manualmente.",
-      url: "http://t.me/+neKcGn4L5Xw2NmIx",
-      imagem: "https://via.placeholder.com/600x300?text=Canal+Exemplo"
-    }
-  ];
-
-  renderizarCatalogo(canaisTeste);
-}
-
 // Obtém dados do usuário via Telegram WebApp
 const telegramUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
 const userId = telegramUser?.id;
 
-// Verifica se o usuário é admin
 async function verificarAdmin(id) {
   const { data, error } = await supabase
     .from('admins')
     .select('*')
     .eq('id', Number(id));
 
+  if (error) {
+    alert("Erro ao verificar admin: " + error.message);
+    console.error("Erro ao verificar admin:", error.message);
+    return false;
+  }
+
+  console.log("Dados do admin:", data);
   return data && data.length > 0;
+}
+
+async function carregarCanais() {
+  const { data, error } = await supabase
+    .from("canais")
+    .select("*")
+    .order("id", { ascending: false });
+
+  if (error) {
+    console.error("Erro ao carregar canais:", error.message);
+    return;
+  }
+
+  renderizarCatalogo(data);
 }
 
 // Renderiza os canais no catálogo
