@@ -1,17 +1,8 @@
 body {
   font-family: Arial, sans-serif;
-  background-color: #f0f0f0;
 }
 
 .card-img-top {
-  object-fit: cover;
   height: 180px;
-}
-
-.card {
-  transition: transform 0.2s ease;
-}
-
-.card:hover {
-  transform: scale(1.02);
+  object-fit: cover;
 }
