@@ -9,10 +9,16 @@ const telegramUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
 const userId = telegramUser?.id;
 
 async function verificarAdmin(id) {
+  const numericId = Number(id);
+  if (isNaN(numericId)) {
+    console.error("ID inválido:", id);
+    return false;
+  }
+
   const { data, error } = await supabase
     .from('admins')
     .select('*')
-    .eq('id', Number(id));
+    .eq('id', numericId);
 
   if (error) {
     alert("Erro ao verificar admin: " + error.message);
@@ -88,7 +94,14 @@ window.onload = async () => {
   if (window.Telegram?.WebApp) {
     Telegram.WebApp.expand();
   }
+
   console.log("User ID detectado:", userId);
+
+  if (!userId) {
+    alert("Erro: não foi possível obter o ID do usuário do Telegram.");
+    return;
+  }
+
   const admin = await verificarAdmin(userId);
   if (admin) {
     document.getElementById("adminPanel").classList.remove("d-none");
