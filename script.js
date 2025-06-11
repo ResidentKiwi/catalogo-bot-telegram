@@ -1,7 +1,7 @@
 const SUPABASE_URL = "https://vcbiaornaidbskwzzvrs.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZjYmlhb3JuYWlkYnNrd3p6dnJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2NjQ5OTksImV4cCI6MjA2NTI0MDk5OX0.Nc3a4WxmRmnAC13S9fw8KkaHi8dNn4qUwUAeO5fHv04";
 
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Identifica usuário via Telegram WebApp
 const telegramUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
