@@ -1,23 +1,24 @@
 const SUPABASE_URL = "https://vcbiaornaidbskwzzvrs.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZjYmlhb3JuYWlkYnNrd3p6dnJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2NjQ5OTksImV4cCI6MjA2NTI0MDk5OX0.Nc3a4WxmRmnAC13S9fw8KkaHi8dNn4qUwUAeO5fHv04";
 
-const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// ✅ Correção aqui:
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Identifica usuário via Telegram WebApp
+// Obtém dados do usuário via Telegram WebApp
 const telegramUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
 const userId = telegramUser?.id;
 
-// Verifica se é admin
+// Verifica se o usuário é admin
 async function verificarAdmin(id) {
   const { data, error } = await supabase
     .from('admins')
     .select('*')
     .eq('id', id);
 
-  return data.length > 0;
+  return data && data.length > 0;
 }
 
-// Renderiza os cards de canais
+// Renderiza os canais no catálogo
 function renderizarCatalogo(canais) {
   const container = document.getElementById("catalogo");
   container.innerHTML = "";
@@ -40,9 +41,12 @@ function renderizarCatalogo(canais) {
   });
 }
 
-// Carrega os canais do Supabase
+// Carrega canais da tabela do Supabase
 async function carregarCanais() {
-  const { data, error } = await supabase.from("canais").select("*").order('id', { ascending: false });
+  const { data, error } = await supabase
+    .from("canais")
+    .select("*")
+    .order("id", { ascending: false });
 
   if (error) {
     console.error("Erro ao carregar canais:", error.message);
@@ -52,7 +56,7 @@ async function carregarCanais() {
   renderizarCatalogo(data);
 }
 
-// Adiciona novo canal
+// Adiciona novo canal ao Supabase
 async function adicionarCanal(event) {
   event.preventDefault();
 
@@ -74,7 +78,7 @@ async function adicionarCanal(event) {
   }
 }
 
-// Inicializa a aplicação
+// Inicializa tudo ao carregar
 window.onload = async () => {
   if (window.Telegram?.WebApp) {
     Telegram.WebApp.expand();
