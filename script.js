@@ -1,5 +1,5 @@
 // URL do seu backend no Render
-const BACKEND_URL = "https://SEU-BACKEND-NO-RENDER.onrender.com";
+const BACKEND_URL = "https://cat-logo-backend.onrender.com";
 
 // Renderiza os canais no catálogo
 function renderizarCatalogo(canais) {
