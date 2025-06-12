@@ -120,12 +120,19 @@ window.onload = async () => {
   Telegram.WebApp.ready();
   Telegram.WebApp.expand();
 
-  const userId = Telegram.WebApp.initDataUnsafe.user?.id;
+  const user = Telegram.WebApp.initDataUnsafe.user;
+  const userId = user?.id;
+
   isAdmin = await verificarAdmin(userId);
+
   if (isAdmin) {
     document.getElementById("adminPanel").classList.remove("d-none");
     document.getElementById("canalForm").addEventListener("submit", adicionarCanal);
     document.getElementById("editarForm").addEventListener("submit", editarCanal);
+
+    // Preenche nome de usuário e ID do Telegram no painel
+    document.getElementById("adminUsername").textContent = user.username || user.first_name || "Usuário";
+    document.getElementById("adminUserId").textContent = user.id;
   }
 
   carregarCanais();
