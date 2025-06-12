@@ -1,17 +1,33 @@
 const BACKEND_URL = "https://cat-logo-backend.onrender.com";
+
 let isAdmin = false;
 
-function mostrarCarregando(mostrar) {
-  const loader = document.getElementById("loading");
-  loader.style.display = mostrar ? "flex" : "none";
-}
+// Tela de carregamento
+const loadingScreen = document.createElement("div");
+loadingScreen.id = "loadingScreen";
+loadingScreen.style.position = "fixed";
+loadingScreen.style.top = 0;
+loadingScreen.style.left = 0;
+loadingScreen.style.width = "100vw";
+loadingScreen.style.height = "100vh";
+loadingScreen.style.background = "#000";
+loadingScreen.style.color = "#fff";
+loadingScreen.style.display = "flex";
+loadingScreen.style.alignItems = "center";
+loadingScreen.style.justifyContent = "center";
+loadingScreen.style.zIndex = "9999";
+loadingScreen.innerHTML = `<div class="text-center">
+  <div class="spinner-border text-light mb-3" role="status"></div>
+  <div>Carregando catálogo...</div>
+</div>`;
+document.body.appendChild(loadingScreen);
 
 function criarCard(canal) {
   const col = document.createElement("div");
   col.className = "col-md-4 mb-4";
   col.innerHTML = `
     <div class="card h-100 shadow-sm bg-dark text-light border-secondary">
-      <img src="${canal.imagem}" class="card-img-top" alt="${canal.nome}" style="max-height: 200px; object-fit: cover;">
+      <img src="${canal.imagem}" class="card-img-top" alt="${canal.nome}">
       <div class="card-body d-flex flex-column">
         <h5 class="card-title text-white">${canal.nome}</h5>
         <p class="card-text flex-grow-1">${canal.descricao}</p>
@@ -20,7 +36,7 @@ function criarCard(canal) {
         </a>
         ${isAdmin ? `
           <div class="mt-2 d-flex justify-content-between">
-            <button class="btn btn-sm btn-outline-secondary" onclick='abrirModalEdicao(${JSON.stringify(canal)})'>
+            <button class="btn btn-sm btn-outline-secondary edit-btn" onclick='abrirModalEdicao(${JSON.stringify(canal)})'>
               <i class="fas fa-pen"></i>
             </button>
             <button class="btn btn-sm btn-outline-danger" onclick='excluirCanal(${canal.id})'>
@@ -41,15 +57,10 @@ function renderizarCatalogo(canais) {
 }
 
 async function carregarCanais() {
-  mostrarCarregando(true);
-  try {
-    const res = await fetch(`${BACKEND_URL}/canais`);
-    const canais = await res.json();
-    renderizarCatalogo(canais);
-  } catch (error) {
-    alert("Erro ao carregar canais.");
-  }
-  mostrarCarregando(false);
+  const res = await fetch(`${BACKEND_URL}/canais`);
+  const canais = await res.json();
+  renderizarCatalogo(canais);
+  loadingScreen.remove(); // remove loading após o carregamento
 }
 
 async function verificarAdmin(id) {
@@ -94,7 +105,6 @@ function abrirModalEdicao(canal) {
   document.getElementById("editNome").value = canal.nome;
   document.getElementById("editDescricao").value = canal.descricao;
   document.getElementById("editUrl").value = canal.url;
-  document.getElementById("editImagemArquivo").value = "";
   new bootstrap.Modal(document.getElementById("editarModal")).show();
 }
 
@@ -105,11 +115,9 @@ async function editarCanal(event) {
   const descricao = document.getElementById("editDescricao").value;
   const url = document.getElementById("editUrl").value;
   const imagemArquivo = document.getElementById("editImagemArquivo").files[0];
-
   let imagemURL = null;
-  if (imagemArquivo) {
-    imagemURL = await uploadImagem(imagemArquivo);
-  }
+
+  if (imagemArquivo) imagemURL = await uploadImagem(imagemArquivo);
 
   const body = { nome, descricao, url };
   if (imagemURL) body.imagem = imagemURL;
@@ -150,7 +158,7 @@ window.onload = async () => {
     document.getElementById("adminUsername").textContent = username;
     document.getElementById("adminUserId").textContent = userId;
     document.getElementById("canalForm").addEventListener("submit", adicionarCanal);
-    document.getElementById("editarForm").addEventListener("submit", editarCanal);
+    document.getElementById("editarForm")?.addEventListener("submit", editarCanal);
   }
 
   carregarCanais();
