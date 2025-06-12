@@ -27,12 +27,16 @@ h1 {
 }
 
 .card-title {
-  color: #ffffff;
+  color: #ffffff !important;
   font-weight: 500;
 }
 
 .card-text {
-  color: #cccccc;
+  color: #e0e0e0 !important;
+}
+
+.card a {
+  color: #ffffff;
 }
 
 /* Botões */
@@ -51,6 +55,26 @@ h1 {
   color: white;
 }
 
+.btn-warning {
+  background-color: #ffa500;
+  border: none;
+  color: white;
+}
+
+.btn-warning:hover {
+  background-color: #e59400;
+}
+
+.btn-danger {
+  background-color: #d9534f;
+  border: none;
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #c9302c;
+}
+
 /* Painel Admin */
 #adminPanel {
   position: relative;
@@ -59,17 +83,17 @@ h1 {
   background-color: #1f1f1f;
   border: 1px solid #333;
   border-radius: 12px;
-  color: white;
+  padding: 1.5rem;
 }
 
 #adminPanel h4 {
-  color: white;
+  color: #ffffff;
 }
 
 #adminPanel input,
 #adminPanel textarea {
   background-color: #2b2b2b;
-  color: white;
+  color: #f0f0f0;
   border: 1px solid #444;
 }
 
