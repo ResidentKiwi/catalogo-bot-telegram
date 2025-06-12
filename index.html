@@ -13,13 +13,8 @@
   <div class="container py-4">
     <h1 class="text-center mb-4">📚 Catálogo de Canais Parceiros</h1>
 
-    <!-- Catálogo de canais -->
-    <div class="row" id="catalogo">
-      <!-- Itens inseridos via JS -->
-    </div>
-
-    <!-- Painel de admin (visível apenas para admins) -->
-    <div id="adminPanel" class="card p-3 mt-4 d-none">
+    <!-- Painel Admin fixo -->
+    <div id="adminPanel" class="card p-3 mb-4 d-none position-sticky top-0 z-3 bg-white shadow-sm">
       <h4>Adicionar novo canal</h4>
       <form id="canalForm">
         <div class="mb-2">
@@ -32,13 +27,41 @@
           <input type="url" class="form-control" placeholder="Link do canal (URL)" id="url" required>
         </div>
         <div class="mb-2">
-          <input type="url" class="form-control" placeholder="URL da imagem" id="imagem" required>
+          <input type="file" class="form-control" id="imagemArquivo" required>
         </div>
-        <button type="submit" class="btn btn-outline-success">Adicionar Canal</button>
+        <button type="submit" class="btn btn-success">Adicionar Canal</button>
       </form>
+    </div>
+
+    <!-- Catálogo de canais -->
+    <div class="row" id="catalogo"></div>
+  </div>
+
+  <!-- Modal de Edição -->
+  <div class="modal fade" id="editarModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="editarForm">
+          <div class="modal-header">
+            <h5 class="modal-title">Editar Canal</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="editId">
+            <input type="text" class="form-control mb-2" id="editNome" placeholder="Nome" required>
+            <textarea class="form-control mb-2" id="editDescricao" placeholder="Descrição" required></textarea>
+            <input type="url" class="form-control mb-2" id="editUrl" placeholder="URL" required>
+            <input type="file" class="form-control" id="editImagemArquivo">
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Salvar</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 
   <script src="script.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
