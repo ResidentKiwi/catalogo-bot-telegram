@@ -1,7 +1,6 @@
 const BACKEND_URL = "https://cat-logo-backend.onrender.com";
 
 let isAdmin = false;
-
 const loadingScreen = document.getElementById("loading");
 
 function criarCard(canal) {
@@ -18,10 +17,16 @@ function criarCard(canal) {
         </a>
         ${isAdmin ? `
           <div class="mt-2 d-flex justify-content-between">
-            <button class="btn btn-sm btn-outline-secondary edit-btn" onclick='abrirModalEdicao(${JSON.stringify(canal)})'>
+            <button
+              class="btn btn-sm btn-outline-secondary edit-btn"
+              onclick='abrirModalEdicao(${JSON.stringify(canal)})'
+            >
               <i class="fas fa-pen"></i>
             </button>
-            <button class="btn btn-sm btn-outline-danger" onclick='excluirCanal(${canal.id})'>
+            <button
+              class="btn btn-sm btn-outline-danger"
+              onclick='excluirCanal(${canal.id})'
+            >
               <i class="fas fa-trash"></i>
             </button>
           </div>
@@ -35,20 +40,20 @@ function criarCard(canal) {
 function renderizarCatalogo(canais) {
   const container = document.getElementById("catalogo");
   container.innerHTML = "";
-  canais.forEach((canal) => container.appendChild(criarCard(canal)));
+  canais.forEach(canal => container.appendChild(criarCard(canal)));
 }
 
 async function carregarCanais() {
-  loadingScreen.style.display = "flex"; // Mostrar loading
+  loadingScreen.style.display = "flex";  // mostra loading
   try {
     const res = await fetch(`${BACKEND_URL}/canais`);
     const canais = await res.json();
     renderizarCatalogo(canais);
   } catch (err) {
-    alert("Erro ao carregar canais.");
     console.error(err);
+    alert("Erro ao carregar canais.");
   } finally {
-    loadingScreen.style.display = "none"; // Esconder loading
+    loadingScreen.style.display = "none"; // esconde loading
   }
 }
 
@@ -75,14 +80,12 @@ async function adicionarCanal(event) {
   const descricao = document.getElementById("descricao").value;
   const url = document.getElementById("url").value;
   const imagemArquivo = document.getElementById("imagemArquivo").files[0];
-
   const imagemURL = await uploadImagem(imagemArquivo);
-  const canal = { nome, descricao, url, imagem: imagemURL };
 
   await fetch(`${BACKEND_URL}/canais`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(canal),
+    body: JSON.stringify({ nome, descricao, url, imagem: imagemURL }),
   });
 
   document.getElementById("canalForm").reset();
@@ -104,13 +107,57 @@ async function editarCanal(event) {
   const descricao = document.getElementById("editDescricao").value;
   const url = document.getElementById("editUrl").value;
   const imagemArquivo = document.getElementById("editImagemArquivo").files[0];
-  let imagemURL = null;
+  let body = { nome, descricao, url };
 
-  if (imagemArquivo) imagemURL = await uploadImagem(imagemArquivo);
-
-  const body = { nome, descricao, url };
-  if (imagemURL) body.imagem = imagemURL;
+  if (imagemArquivo) {
+    const imagemURL = await uploadImagem(imagemArquivo);
+    body.imagem = imagemURL;
+  }
 
   await fetch(`${BACKEND_URL}/canais/${id}`, {
     method: "PUT",
-    headers: { "Content
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  bootstrap.Modal.getInstance(document.getElementById("editarModal")).hide();
+  carregarCanais();
+}
+
+async function excluirCanal(id) {
+  if (!confirm("Deseja mesmo excluir este canal?")) return;
+  await fetch(`${BACKEND_URL}/canais/${id}`, { method: "DELETE" });
+  carregarCanais();
+}
+
+window.onload = async () => {
+  // Inicialização Telegram WebApp
+  if (!window.Telegram?.WebApp?.initDataUnsafe) {
+    alert("Execute dentro do Telegram.");
+    return;
+  }
+  Telegram.WebApp.ready();
+  Telegram.WebApp.expand();
+
+  // Dados do usuário
+  const user = Telegram.WebApp.initDataUnsafe.user;
+  const userId = user?.id;
+  const username = user?.username || "Desconhecido";
+
+  // Verifica se é admin
+  isAdmin = await verificarAdmin(userId);
+
+  if (isAdmin) {
+    // Mostra painel e preenche nome/ID
+    document.getElementById("adminPanel").classList.remove("d-none");
+    document.getElementById("adminUsername").textContent = username;
+    document.getElementById("adminUserId").textContent = userId;
+
+    // Listeners de criação/edição
+    document.getElementById("canalForm").addEventListener("submit", adicionarCanal);
+    document.getElementById("editarForm").addEventListener("submit", editarCanal);
+  }
+
+  // Carrega catálogo
+  await carregarCanais();
+};
