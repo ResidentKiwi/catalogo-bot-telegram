@@ -6,16 +6,22 @@ function criarCard(canal) {
   const col = document.createElement("div");
   col.className = "col-md-4 mb-4";
   col.innerHTML = `
-    <div class="card h-100 shadow-sm">
+    <div class="card h-100 shadow-sm bg-dark text-light border-secondary">
       <img src="${canal.imagem}" class="card-img-top" alt="${canal.nome}">
       <div class="card-body d-flex flex-column">
-        <h5 class="card-title">${canal.nome}</h5>
+        <h5 class="card-title text-white">${canal.nome}</h5>
         <p class="card-text flex-grow-1">${canal.descricao}</p>
-        <a href="${canal.url}" target="_blank" class="btn btn-primary mt-auto">🔗 Acessar Canal</a>
+        <a href="${canal.url}" target="_blank" class="btn btn-outline-light mt-auto">
+          <i class="fas fa-link me-1"></i>Acessar Canal
+        </a>
         ${isAdmin ? `
           <div class="mt-2 d-flex justify-content-between">
-            <button class="btn btn-sm btn-outline-secondary" onclick='abrirModalEdicao(${JSON.stringify(canal)})'>✏️</button>
-            <button class="btn btn-sm btn-outline-danger" onclick='excluirCanal(${canal.id})'>🗑️</button>
+            <button class="btn btn-sm btn-outline-secondary" onclick='abrirModalEdicao(${JSON.stringify(canal)})'>
+              <i class="fas fa-pen"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger" onclick='excluirCanal(${canal.id})'>
+              <i class="fas fa-trash"></i>
+            </button>
           </div>
         ` : ""}
       </div>
@@ -122,17 +128,16 @@ window.onload = async () => {
 
   const user = Telegram.WebApp.initDataUnsafe.user;
   const userId = user?.id;
+  const username = user?.username || "Desconhecido";
 
   isAdmin = await verificarAdmin(userId);
 
   if (isAdmin) {
     document.getElementById("adminPanel").classList.remove("d-none");
+    document.getElementById("adminUsername").textContent = username;
+    document.getElementById("adminUserId").textContent = userId;
     document.getElementById("canalForm").addEventListener("submit", adicionarCanal);
-    document.getElementById("editarForm").addEventListener("submit", editarCanal);
-
-    // Preenche nome de usuário e ID do Telegram no painel
-    document.getElementById("adminUsername").textContent = user.username || user.first_name || "Usuário";
-    document.getElementById("adminUserId").textContent = user.id;
+    document.getElementById("editarForm")?.addEventListener("submit", editarCanal);
   }
 
   carregarCanais();
