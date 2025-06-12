@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="pt-BR">
+<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -11,34 +12,47 @@
 </head>
 <body class="bg-dark text-light">
   <div class="container py-5">
-    <h1 class="text-center mb-5">📚 Catálogo de Canais Parceiros</h1><!-- Painel de admin (visível apenas para admins) -->
-<div id="adminPanel" class="card bg-secondary bg-opacity-25 border-0 p-4 rounded-4 mb-5 d-none">
-  <h4 class="mb-3">Adicionar novo canal</h4>
-  <form id="canalForm">
-    <div class="row g-2">
-      <div class="col-md-6">
-        <input type="text" class="form-control bg-dark text-light border-secondary" placeholder="Nome do canal" id="nome" required>
+
+    <h1 class="text-center mb-5">
+      📚 Catálogo de Canais Parceiros
+    </h1>
+
+    <!-- Painel de admin (visível apenas para admins) -->
+    <div id="adminPanel" class="card bg-secondary bg-opacity-25 border-0 p-4 rounded-4 mb-5 d-none">
+      <div class="mb-3 text-light">
+        <small><i class="fas fa-user-shield me-2"></i>Conectado como: <strong id="adminUsername">Admin</strong> (ID: <span id="adminUserId">----</span>)</small>
       </div>
-      <div class="col-md-6">
-        <input type="url" class="form-control bg-dark text-light border-secondary" placeholder="Link do canal (URL)" id="url" required>
-      </div>
-      <div class="col-md-12">
-        <textarea class="form-control bg-dark text-light border-secondary" placeholder="Descrição" id="descricao" required></textarea>
-      </div>
-      <div class="col-md-12">
-        <input type="file" class="form-control bg-dark text-light border-secondary" id="imagem" accept="image/*">
-      </div>
+
+      <h4 class="mb-3 text-white">Adicionar novo canal</h4>
+
+      <form id="canalForm">
+        <div class="row g-2">
+          <div class="col-md-6">
+            <input type="text" class="form-control bg-dark text-light border-secondary" placeholder="Nome do canal" id="nome" required>
+          </div>
+          <div class="col-md-6">
+            <input type="url" class="form-control bg-dark text-light border-secondary" placeholder="Link do canal (URL)" id="url" required>
+          </div>
+          <div class="col-md-12">
+            <textarea class="form-control bg-dark text-light border-secondary" placeholder="Descrição" id="descricao" required></textarea>
+          </div>
+          <div class="col-md-12">
+            <input type="file" class="form-control bg-dark text-light border-secondary" id="imagemArquivo" accept="image/*">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-success mt-3">
+          <i class="fas fa-plus-circle me-2"></i>Adicionar Canal
+        </button>
+      </form>
     </div>
-    <button type="submit" class="btn btn-success mt-3">
-      <i class="fas fa-plus-circle me-2"></i>Adicionar Canal
-    </button>
-  </form>
-</div>
 
-<!-- Catálogo de canais -->
-<div class="row" id="catalogo">
-  <!-- Itens inseridos via JS -->
-</div>
+    <!-- Catálogo de canais -->
+    <div class="row" id="catalogo">
+      <!-- Itens inseridos via JS -->
+    </div>
 
-  </div>  <script src="script.js"></script></body>
+  </div>
+
+  <script src="script.js"></script>
+</body>
 </html>
