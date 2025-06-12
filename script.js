@@ -2,25 +2,7 @@ const BACKEND_URL = "https://cat-logo-backend.onrender.com";
 
 let isAdmin = false;
 
-// Tela de carregamento
-const loadingScreen = document.createElement("div");
-loadingScreen.id = "loadingScreen";
-loadingScreen.style.position = "fixed";
-loadingScreen.style.top = 0;
-loadingScreen.style.left = 0;
-loadingScreen.style.width = "100vw";
-loadingScreen.style.height = "100vh";
-loadingScreen.style.background = "#000";
-loadingScreen.style.color = "#fff";
-loadingScreen.style.display = "flex";
-loadingScreen.style.alignItems = "center";
-loadingScreen.style.justifyContent = "center";
-loadingScreen.style.zIndex = "9999";
-loadingScreen.innerHTML = `<div class="text-center">
-  <div class="spinner-border text-light mb-3" role="status"></div>
-  <div>Carregando catálogo...</div>
-</div>`;
-document.body.appendChild(loadingScreen);
+const loadingScreen = document.getElementById("loading");
 
 function criarCard(canal) {
   const col = document.createElement("div");
@@ -53,14 +35,21 @@ function criarCard(canal) {
 function renderizarCatalogo(canais) {
   const container = document.getElementById("catalogo");
   container.innerHTML = "";
-  canais.forEach(canal => container.appendChild(criarCard(canal)));
+  canais.forEach((canal) => container.appendChild(criarCard(canal)));
 }
 
 async function carregarCanais() {
-  const res = await fetch(`${BACKEND_URL}/canais`);
-  const canais = await res.json();
-  renderizarCatalogo(canais);
-  loadingScreen.remove(); // remove loading após o carregamento
+  loadingScreen.style.display = "flex"; // Mostrar loading
+  try {
+    const res = await fetch(`${BACKEND_URL}/canais`);
+    const canais = await res.json();
+    renderizarCatalogo(canais);
+  } catch (err) {
+    alert("Erro ao carregar canais.");
+    console.error(err);
+  } finally {
+    loadingScreen.style.display = "none"; // Esconder loading
+  }
 }
 
 async function verificarAdmin(id) {
@@ -124,42 +113,4 @@ async function editarCanal(event) {
 
   await fetch(`${BACKEND_URL}/canais/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-
-  bootstrap.Modal.getInstance(document.getElementById("editarModal")).hide();
-  carregarCanais();
-}
-
-async function excluirCanal(id) {
-  if (!confirm("Deseja mesmo excluir este canal?")) return;
-  await fetch(`${BACKEND_URL}/canais/${id}`, { method: "DELETE" });
-  carregarCanais();
-}
-
-window.onload = async () => {
-  if (!window.Telegram?.WebApp?.initDataUnsafe) {
-    alert("Execute dentro do Telegram.");
-    return;
-  }
-
-  Telegram.WebApp.ready();
-  Telegram.WebApp.expand();
-
-  const user = Telegram.WebApp.initDataUnsafe.user;
-  const userId = user?.id;
-  const username = user?.username || "Desconhecido";
-
-  isAdmin = await verificarAdmin(userId);
-
-  if (isAdmin) {
-    document.getElementById("adminPanel").classList.remove("d-none");
-    document.getElementById("adminUsername").textContent = username;
-    document.getElementById("adminUserId").textContent = userId;
-    document.getElementById("canalForm").addEventListener("submit", adicionarCanal);
-    document.getElementById("editarForm")?.addEventListener("submit", editarCanal);
-  }
-
-  carregarCanais();
-};
+    headers: { "Content
