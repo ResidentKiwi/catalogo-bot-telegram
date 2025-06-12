@@ -1,116 +1,131 @@
-// URL do seu backend no Render
 const BACKEND_URL = "https://cat-logo-backend.onrender.com";
 
-// Renderiza os canais no catálogo
+let isAdmin = false;
+
+function criarCard(canal) {
+  const col = document.createElement("div");
+  col.className = "col-md-4 mb-4";
+  col.innerHTML = `
+    <div class="card h-100 shadow-sm">
+      <img src="${canal.imagem}" class="card-img-top" alt="${canal.nome}">
+      <div class="card-body d-flex flex-column">
+        <h5 class="card-title">${canal.nome}</h5>
+        <p class="card-text flex-grow-1">${canal.descricao}</p>
+        <a href="${canal.url}" target="_blank" class="btn btn-primary mt-auto">🔗 Acessar Canal</a>
+        ${isAdmin ? `
+          <div class="mt-2 d-flex justify-content-between">
+            <button class="btn btn-sm btn-outline-secondary" onclick='abrirModalEdicao(${JSON.stringify(canal)})'>✏️</button>
+            <button class="btn btn-sm btn-outline-danger" onclick='excluirCanal(${canal.id})'>🗑️</button>
+          </div>
+        ` : ""}
+      </div>
+    </div>
+  `;
+  return col;
+}
+
 function renderizarCatalogo(canais) {
   const container = document.getElementById("catalogo");
   container.innerHTML = "";
-
-  canais.forEach(canal => {
-    const col = document.createElement("div");
-    col.className = "col-md-4 mb-4";
-
-    col.innerHTML = `
-      <div class="card shadow-sm h-100">
-        <img src="${canal.imagem}" class="card-img-top" alt="${canal.nome}">
-        <div class="card-body d-flex flex-column">
-          <h5 class="card-title">${canal.nome}</h5>
-          <p class="card-text flex-grow-1">${canal.descricao}</p>
-          <a href="${canal.url}" target="_blank" class="btn btn-primary mt-auto">🔗 Acessar Canal</a>
-        </div>
-      </div>
-    `;
-    container.appendChild(col);
-  });
+  canais.forEach(canal => container.appendChild(criarCard(canal)));
 }
 
-// Carrega os canais do backend
 async function carregarCanais() {
-  try {
-    const response = await fetch(`${BACKEND_URL}/canais`);
-    const canais = await response.json();
-    renderizarCatalogo(canais);
-  } catch (error) {
-    console.error("Erro ao carregar canais:", error);
-  }
+  const res = await fetch(`${BACKEND_URL}/canais`);
+  const canais = await res.json();
+  renderizarCatalogo(canais);
 }
 
-// Verifica se o usuário é admin
 async function verificarAdmin(id) {
-  const numericId = Number(id);
-  if (isNaN(numericId)) {
-    console.error("ID inválido:", id);
-    return false;
-  }
-
-  try {
-    const response = await fetch(`${BACKEND_URL}/admins/${numericId}`);
-    const json = await response.json();
-    console.log("Dados do admin:", json);
-    return json.admin === true;
-  } catch (error) {
-    alert("Erro ao verificar admin.");
-    console.error("Erro ao verificar admin:", error);
-    return false;
-  }
+  const res = await fetch(`${BACKEND_URL}/admins/${id}`);
+  const json = await res.json();
+  return json.admin === true;
 }
 
-// Adiciona novo canal via backend
+async function uploadImagem(arquivo) {
+  const formData = new FormData();
+  formData.append("file", arquivo);
+  const res = await fetch(`${BACKEND_URL}/upload`, {
+    method: "POST",
+    body: formData,
+  });
+  const json = await res.json();
+  return json.url;
+}
+
 async function adicionarCanal(event) {
   event.preventDefault();
+  const nome = document.getElementById("nome").value;
+  const descricao = document.getElementById("descricao").value;
+  const url = document.getElementById("url").value;
+  const imagemArquivo = document.getElementById("imagemArquivo").files[0];
 
-  const canal = {
-    nome: document.getElementById("nome").value,
-    descricao: document.getElementById("descricao").value,
-    url: document.getElementById("url").value,
-    imagem: document.getElementById("imagem").value,
-  };
+  const imagemURL = await uploadImagem(imagemArquivo);
+  const canal = { nome, descricao, url, imagem: imagemURL };
 
-  try {
-    const response = await fetch(`${BACKEND_URL}/canais`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(canal),
-    });
+  await fetch(`${BACKEND_URL}/canais`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(canal),
+  });
 
-    if (!response.ok) {
-      throw new Error("Erro ao adicionar canal.");
-    }
-
-    document.getElementById("canalForm").reset();
-    carregarCanais();
-  } catch (error) {
-    alert("Erro ao adicionar canal.");
-    console.error(error);
-  }
+  document.getElementById("canalForm").reset();
+  carregarCanais();
 }
 
-// Inicializa tudo corretamente
+function abrirModalEdicao(canal) {
+  document.getElementById("editId").value = canal.id;
+  document.getElementById("editNome").value = canal.nome;
+  document.getElementById("editDescricao").value = canal.descricao;
+  document.getElementById("editUrl").value = canal.url;
+  new bootstrap.Modal(document.getElementById("editarModal")).show();
+}
+
+async function editarCanal(event) {
+  event.preventDefault();
+  const id = document.getElementById("editId").value;
+  const nome = document.getElementById("editNome").value;
+  const descricao = document.getElementById("editDescricao").value;
+  const url = document.getElementById("editUrl").value;
+  const imagemArquivo = document.getElementById("editImagemArquivo").files[0];
+  let imagemURL = null;
+
+  if (imagemArquivo) imagemURL = await uploadImagem(imagemArquivo);
+
+  const body = { nome, descricao, url };
+  if (imagemURL) body.imagem = imagemURL;
+
+  await fetch(`${BACKEND_URL}/canais/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  bootstrap.Modal.getInstance(document.getElementById("editarModal")).hide();
+  carregarCanais();
+}
+
+async function excluirCanal(id) {
+  if (!confirm("Deseja mesmo excluir este canal?")) return;
+  await fetch(`${BACKEND_URL}/canais/${id}`, { method: "DELETE" });
+  carregarCanais();
+}
+
 window.onload = async () => {
   if (!window.Telegram?.WebApp?.initDataUnsafe) {
-    alert("Esta aplicação precisa ser executada dentro do Telegram.");
-    console.error("Telegram WebApp não disponível.");
+    alert("Execute dentro do Telegram.");
     return;
   }
 
   Telegram.WebApp.ready();
   Telegram.WebApp.expand();
 
-  const telegramUser = Telegram.WebApp.initDataUnsafe.user;
-  if (!telegramUser?.id) {
-    alert("Não foi possível identificar seu usuário Telegram.");
-    console.error("User Telegram inválido:", telegramUser);
-    return;
-  }
-
-  const userId = telegramUser.id;
-  console.log("✅ ID do usuário Telegram:", userId);
-
-  if (await verificarAdmin(userId)) {
+  const userId = Telegram.WebApp.initDataUnsafe.user?.id;
+  isAdmin = await verificarAdmin(userId);
+  if (isAdmin) {
     document.getElementById("adminPanel").classList.remove("d-none");
     document.getElementById("canalForm").addEventListener("submit", adicionarCanal);
+    document.getElementById("editarForm").addEventListener("submit", editarCanal);
   }
 
   carregarCanais();
