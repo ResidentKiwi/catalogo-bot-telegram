@@ -1,8 +1,5 @@
-const SUPABASE_URL = "https://vcbiaornaidbskwzzvrs.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZjYmlhb3JuYWlkYnNrd3p6dnJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2NjQ5OTksImV4cCI6MjA2NTI0MDk5OX0.Nc3a4WxmRmnAC13S9fw8KkaHi8dNn4qUwUAeO5fHv04";
-
-// Inicializa cliente Supabase
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// URL do seu backend no Render
+const BACKEND_URL = "https://SEU-BACKEND-NO-RENDER.onrender.com";
 
 // Renderiza os canais no catálogo
 function renderizarCatalogo(canais) {
@@ -27,19 +24,15 @@ function renderizarCatalogo(canais) {
   });
 }
 
-// Carrega os canais do Supabase
+// Carrega os canais do backend
 async function carregarCanais() {
-  const { data, error } = await supabase
-    .from("canais")
-    .select("*")
-    .order("id", { ascending: false });
-
-  if (error) {
-    console.error("Erro ao carregar canais:", error.message);
-    return;
+  try {
+    const response = await fetch(`${BACKEND_URL}/canais`);
+    const canais = await response.json();
+    renderizarCatalogo(canais);
+  } catch (error) {
+    console.error("Erro ao carregar canais:", error);
   }
-
-  renderizarCatalogo(data);
 }
 
 // Verifica se o usuário é admin
@@ -50,22 +43,19 @@ async function verificarAdmin(id) {
     return false;
   }
 
-  const { data, error } = await supabase
-    .from("admins")
-    .select("*")
-    .eq("id", numericId);
-
-  if (error) {
-    alert("Erro ao verificar admin: " + error.message);
-    console.error("Erro ao verificar admin:", error.message);
+  try {
+    const response = await fetch(`${BACKEND_URL}/admins/${numericId}`);
+    const json = await response.json();
+    console.log("Dados do admin:", json);
+    return json.admin === true;
+  } catch (error) {
+    alert("Erro ao verificar admin.");
+    console.error("Erro ao verificar admin:", error);
     return false;
   }
-
-  console.log("Dados do admin:", data);
-  return data && data.length > 0;
 }
 
-// Adiciona novo canal
+// Adiciona novo canal via backend
 async function adicionarCanal(event) {
   event.preventDefault();
 
@@ -73,23 +63,32 @@ async function adicionarCanal(event) {
     nome: document.getElementById("nome").value,
     descricao: document.getElementById("descricao").value,
     url: document.getElementById("url").value,
-    imagem: document.getElementById("imagem").value
+    imagem: document.getElementById("imagem").value,
   };
 
-  const { error } = await supabase.from("canais").insert([canal]);
+  try {
+    const response = await fetch(`${BACKEND_URL}/canais`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(canal),
+    });
 
-  if (error) {
-    alert("Erro ao adicionar canal.");
-    console.error(error);
-  } else {
+    if (!response.ok) {
+      throw new Error("Erro ao adicionar canal.");
+    }
+
     document.getElementById("canalForm").reset();
     carregarCanais();
+  } catch (error) {
+    alert("Erro ao adicionar canal.");
+    console.error(error);
   }
 }
 
-// Inicializa tudo corretamente (único window.onload)
+// Inicializa tudo corretamente
 window.onload = async () => {
-  // Garante que estamos dentro do Telegram WebApp
   if (!window.Telegram?.WebApp?.initDataUnsafe) {
     alert("Esta aplicação precisa ser executada dentro do Telegram.");
     console.error("Telegram WebApp não disponível.");
@@ -99,22 +98,20 @@ window.onload = async () => {
   Telegram.WebApp.ready();
   Telegram.WebApp.expand();
 
-  // Obtém usuário
   const telegramUser = Telegram.WebApp.initDataUnsafe.user;
   if (!telegramUser?.id) {
     alert("Não foi possível identificar seu usuário Telegram.");
     console.error("User Telegram inválido:", telegramUser);
     return;
   }
+
   const userId = telegramUser.id;
   console.log("✅ ID do usuário Telegram:", userId);
 
-  // Verifica admin e mostra painel
   if (await verificarAdmin(userId)) {
     document.getElementById("adminPanel").classList.remove("d-none");
     document.getElementById("canalForm").addEventListener("submit", adicionarCanal);
   }
 
-  // Carrega catálogo
   carregarCanais();
 };
