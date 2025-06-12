@@ -59,16 +59,17 @@ h1 {
   background-color: #1f1f1f;
   border: 1px solid #333;
   border-radius: 12px;
+  color: white;
 }
 
 #adminPanel h4 {
-  color: #ffffff;
+  color: white;
 }
 
 #adminPanel input,
 #adminPanel textarea {
   background-color: #2b2b2b;
-  color: #f0f0f0;
+  color: white;
   border: 1px solid #444;
 }
 
