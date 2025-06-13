@@ -1,4 +1,4 @@
-const BACKEND_URL = "https://cat-logo-backend.onrender.com"; // ajuste para seu backend correto
+const BACKEND_URL = "https://cat-logo-backend.onrender.com";
 
 const tg = window.Telegram.WebApp;
 tg.expand();
@@ -14,10 +14,7 @@ let canais = [];
 let modoEdicao = false;
 let canalEditandoId = null;
 
-// Obtém o user_id do Telegram
-const userId = tg.initDataUnsafe?.user?.id || 0;
-
-// Função para verificar se o usuário é admin
+// Verifica se o usuário é admin
 async function verificarAdmin(id) {
   try {
     const res = await fetch(`${BACKEND_URL}/admins/${id}`);
@@ -29,7 +26,7 @@ async function verificarAdmin(id) {
   }
 }
 
-// Função para carregar canais
+// Carrega canais
 async function carregarCanais() {
   try {
     carregando.style.display = "block";
@@ -48,7 +45,7 @@ async function carregarCanais() {
       card.className = "col-md-4";
 
       card.innerHTML = `
-        <div class="card bg-dark text-white h-100">
+        <div class="card h-100">
           ${canal.imagem ? `<img src="${canal.imagem}" class="card-img-top" alt="${canal.nome}">` : ""}
           <div class="card-body d-flex flex-column">
             <h5 class="card-title">${canal.nome}</h5>
@@ -58,8 +55,7 @@ async function carregarCanais() {
               <div class="mt-2 d-flex justify-content-between">
                 <button class="btn btn-warning btn-sm btn-editar" data-id="${canal.id}"><i class="fa fa-edit"></i></button>
                 <button class="btn btn-danger btn-sm btn-excluir" data-id="${canal.id}"><i class="fa fa-trash"></i></button>
-              </div>
-            ` : ""}
+              </div>` : ""}
           </div>
         </div>
       `;
@@ -72,7 +68,7 @@ async function carregarCanais() {
   }
 }
 
-// Função para adicionar ou editar canal
+// Submete novo canal ou edita
 async function enviarCanal(event) {
   event.preventDefault();
 
@@ -111,7 +107,6 @@ async function enviarCanal(event) {
 
     if (!res.ok) throw new Error("Erro ao salvar canal");
 
-    // Limpa o formulário e recarrega canais
     formulario.reset();
     modoEdicao = false;
     canalEditandoId = null;
@@ -123,7 +118,7 @@ async function enviarCanal(event) {
   }
 }
 
-// Função para preencher formulário para edição
+// Preenche formulário para edição
 function iniciarEdicao(id) {
   const canal = canais.find((c) => c.id === id);
   if (!canal) return;
@@ -140,7 +135,7 @@ function iniciarEdicao(id) {
   adminPanel.scrollIntoView({ behavior: "smooth" });
 }
 
-// Função para excluir canal
+// Exclui canal
 async function excluirCanal(id) {
   if (!confirm("Tem certeza que deseja excluir este canal?")) return;
 
@@ -153,7 +148,7 @@ async function excluirCanal(id) {
   }
 }
 
-// Eventos do formulário e botões dinâmicos
+// Eventos
 formulario.addEventListener("submit", enviarCanal);
 catalogo.addEventListener("click", (event) => {
   if (event.target.closest(".btn-editar")) {
@@ -168,10 +163,20 @@ catalogo.addEventListener("click", (event) => {
 
 // Inicialização
 (async () => {
+  if (!tg.initDataUnsafe?.user) {
+    console.error("Usuário do Telegram não detectado.");
+    carregando.style.display = "none";
+    return;
+  }
+
+  const userId = tg.initDataUnsafe.user.id;
+  const username = tg.initDataUnsafe.user.username || "Admin";
+
   isAdmin = await verificarAdmin(userId);
   if (isAdmin) {
     adminPanel.classList.remove("d-none");
-    adminInfo.textContent = `Conectado como admin: ${tg.initDataUnsafe.user?.username || "Admin"} (${userId})`;
+    adminInfo.textContent = `Conectado como admin: ${username} (${userId})`;
   }
+
   await carregarCanais();
 })();
