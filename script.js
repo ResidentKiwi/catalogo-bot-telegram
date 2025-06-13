@@ -1,4 +1,4 @@
-const BACKEND_URL = "https://cat-logo-backend.onrender.com/"; // Substitua pelo seu
+const BACKEND_URL = "https://cat-logo-backend.onrender.com/"; // Sem barra duplicada
 
 let isAdmin = false;
 let loadingScreen;
@@ -39,7 +39,7 @@ function renderizarCatalogo(canais) {
 
 async function carregarCanais() {
   try {
-    const res = await fetch(`${BACKEND_URL}/canais`);
+    const res = await fetch(`${BACKEND_URL}canais`);
     if (!res.ok) throw new Error(`Erro ${res.status}: ${res.statusText}`);
     const canais = await res.json();
     renderizarCatalogo(canais);
@@ -53,15 +53,20 @@ async function carregarCanais() {
 }
 
 async function verificarAdmin(id) {
-  const res = await fetch(`${BACKEND_URL}/verificar_admin/${id}`);
-  const json = await res.json();
-  return json.admin === true;
+  try {
+    const res = await fetch(`${BACKEND_URL}admins/${id}`);
+    const json = await res.json();
+    return json.admin === true;
+  } catch (err) {
+    console.error("Erro ao verificar admin:", err);
+    return false;
+  }
 }
 
 async function uploadImagem(arquivo) {
   const formData = new FormData();
   formData.append("file", arquivo);
-  const res = await fetch(`${BACKEND_URL}/upload_imagem`, {
+  const res = await fetch(`${BACKEND_URL}upload`, {
     method: "POST",
     body: formData,
   });
@@ -81,10 +86,10 @@ async function adicionarCanal(event) {
     imagemURL = await uploadImagem(imagemArquivo);
   }
 
-  await fetch(`${BACKEND_URL}/adicionar_canal`, {
+  await fetch(`${BACKEND_URL}canais`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ nome, descricao, link, imagem: imagemURL }),
+    body: JSON.stringify({ nome, descricao, url: link, imagem: imagemURL }),
   });
 
   document.getElementById("canalForm").reset();
@@ -106,14 +111,14 @@ async function editarCanal(event) {
   const descricao = document.getElementById("editDescricao").value;
   const link = document.getElementById("editUrl").value;
   const imagemArquivo = document.getElementById("editImagemArquivo").files[0];
-  let body = { nome, descricao, link };
+  let body = { nome, descricao, url: link };
 
   if (imagemArquivo) {
     const imagemURL = await uploadImagem(imagemArquivo);
     body.imagem = imagemURL;
   }
 
-  await fetch(`${BACKEND_URL}/editar_canal/${id}`, {
+  await fetch(`${BACKEND_URL}canais/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -125,7 +130,7 @@ async function editarCanal(event) {
 
 async function excluirCanal(id) {
   if (!confirm("Deseja mesmo excluir este canal?")) return;
-  await fetch(`${BACKEND_URL}/excluir_canal/${id}`, { method: "DELETE" });
+  await fetch(`${BACKEND_URL}canais/${id}`, { method: "DELETE" });
   carregarCanais();
 }
 
@@ -157,3 +162,10 @@ window.onload = async () => {
 
   await carregarCanais();
 };
+
+// Botão de tentar novamente
+document.getElementById("tentarNovamente").addEventListener("click", () => {
+  document.getElementById("erro").classList.add("d-none");
+  loadingScreen.style.display = "flex";
+  carregarCanais();
+});
