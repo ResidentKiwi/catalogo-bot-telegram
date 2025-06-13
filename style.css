@@ -19,13 +19,14 @@ body {
 .card h5 {
   font-size: 1.2rem;
   margin-top: 0.75rem;
-  font-weight: bold;
+  font-weight: 600;
+  color: #ffffff;
 }
 
 .card p {
   margin: 0.5rem 0;
   font-size: 0.95rem;
-  color: #ccc;
+  color: #e0e0e0; /* Mais legível que #ccc */
 }
 
 .form-control, .form-select {
@@ -37,6 +38,38 @@ body {
 
 .btn {
   border-radius: 1rem;
+  font-weight: 500;
+}
+
+.btn-primary {
+  background-color: #333;
+  border-color: #333;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: #444;
+  border-color: #444;
+}
+
+.btn-warning {
+  background-color: #555;
+  border-color: #555;
+}
+
+.btn-warning:hover {
+  background-color: #666;
+  border-color: #666;
+}
+
+.btn-danger {
+  background-color: #772525;
+  border-color: #772525;
+}
+
+.btn-danger:hover {
+  background-color: #992f2f;
+  border-color: #992f2f;
 }
 
 .spinner {
