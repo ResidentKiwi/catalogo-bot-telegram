@@ -8,6 +8,8 @@ let canais = [];
 
 async function init() {
   try {
+    console.log("🔍 tg.initDataUnsafe:", tg.initDataUnsafe);
+
     const initData = tg.initDataUnsafe?.user;
     if (!initData) throw new Error("Usuário do Telegram não identificado.");
 
@@ -17,18 +19,28 @@ async function init() {
       nome: initData.first_name + (initData.last_name ? " " + initData.last_name : "")
     };
 
+    console.log("🙋‍♂️ Usuário identificado:", usuarioTelegram);
+
     const respostaAdmin = await fetch(`${BACKEND_URL}/verificar-admin/${usuarioTelegram.id}`);
     const { admin } = await respostaAdmin.json();
 
     if (admin) {
       document.getElementById("adminPanel").classList.remove("d-none");
-      document.getElementById("adminInfo").innerText = `Conectado como admin: ${usuarioTelegram.username} (ID ${usuarioTelegram.id})`;
       document.getElementById("formulario").addEventListener("submit", adicionarCanal);
+      document.getElementById("adminInfo").innerText = `Conectado como admin: ${usuarioTelegram.username} (ID ${usuarioTelegram.id})`;
     }
 
     await carregarCanais();
   } catch (error) {
-    console.error("Erro ao iniciar app:", error);
+    console.error("❌ Erro ao iniciar app:", error);
+    document.getElementById("catalogo").innerHTML = `
+      <div class="text-center text-danger mt-4">
+        Erro ao carregar o aplicativo.<br />
+        Verifique se você está acessando através do Telegram WebApp.
+      </div>
+    `;
+  } finally {
+    document.getElementById("carregando").style.display = "none";
   }
 }
 
@@ -36,7 +48,6 @@ async function carregarCanais() {
   const resposta = await fetch(`${BACKEND_URL}/listar-canais`);
   canais = await resposta.json();
   renderizarCatalogo(canais);
-  document.getElementById("carregando").style.display = "none";
 }
 
 function renderizarCatalogo(lista) {
