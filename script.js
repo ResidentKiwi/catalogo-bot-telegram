@@ -1,182 +1,150 @@
-const BACKEND_URL = "https://cat-logo-backend.onrender.com";
-
-const tg = window.Telegram.WebApp;
-tg.expand();
-
-const adminPanel = document.getElementById("adminPanel");
-const adminInfo = document.getElementById("adminInfo");
-const formulario = document.getElementById("formulario");
-const catalogo = document.getElementById("catalogo");
-const carregando = document.getElementById("carregando");
-
+const BACKEND_URL = "https://cat-logo-backend.onrender.com"; // Altere se necessário
 let isAdmin = false;
-let canais = [];
-let modoEdicao = false;
-let canalEditandoId = null;
+const loadingScreen = document.getElementById("loading");
 
-// Verifica se o usuário é admin
-async function verificarAdmin(id) {
-  try {
-    const res = await fetch(`${BACKEND_URL}/admins/${id}`);
-    const data = await res.json();
-    return data.admin === true;
-  } catch (error) {
-    console.error("Erro ao verificar admin:", error);
-    return false;
-  }
+function criarCard(canal) {
+  const col = document.createElement("div");
+  col.className = "col-md-6 mb-4";
+  col.innerHTML = `
+    <div class="card h-100 shadow-sm">
+      <img src="${canal.imagem}" class="card-img-top" alt="${canal.nome}">
+      <div class="card-body d-flex flex-column">
+        <h5 class="card-title">${canal.nome}</h5>
+        <p class="card-text flex-grow-1">${canal.descricao || ""}</p>
+        <a href="${canal.link}" target="_blank" class="btn btn-outline-light mt-auto">
+          <i class="fab fa-telegram-plane me-1"></i>Acessar
+        </a>
+        ${isAdmin ? `
+          <div class="mt-3 d-flex justify-content-between">
+            <button class="btn btn-sm btn-warning me-2 w-50" onclick='abrirModalEdicao(${JSON.stringify(canal)})'>
+              <i class="fas fa-edit"></i> Editar
+            </button>
+            <button class="btn btn-sm btn-danger w-50" onclick='excluirCanal(${canal.id})'>
+              <i class="fas fa-trash-alt"></i> Excluir
+            </button>
+          </div>` : ""}
+      </div>
+    </div>
+  `;
+  return col;
 }
 
-// Carrega canais
+function renderizarCatalogo(canais) {
+  const container = document.getElementById("listaCanais");
+  container.innerHTML = "";
+  canais.forEach(canal => container.appendChild(criarCard(canal)));
+}
+
 async function carregarCanais() {
+  loadingScreen.style.display = "flex";
   try {
-    carregando.style.display = "block";
-    catalogo.innerHTML = "";
     const res = await fetch(`${BACKEND_URL}/canais`);
-    if (!res.ok) throw new Error("Erro ao carregar dados");
-    canais = await res.json();
-
-    if (canais.length === 0) {
-      catalogo.innerHTML = "<p class='text-center text-muted'>Nenhum canal cadastrado.</p>";
-      return;
-    }
-
-    canais.forEach((canal) => {
-      const card = document.createElement("div");
-      card.className = "col-md-4";
-
-      card.innerHTML = `
-        <div class="card h-100">
-          ${canal.imagem ? `<img src="${canal.imagem}" class="card-img-top" alt="${canal.nome}">` : ""}
-          <div class="card-body d-flex flex-column">
-            <h5 class="card-title">${canal.nome}</h5>
-            <p class="card-text flex-grow-1">${canal.descricao}</p>
-            <a href="${canal.link}" target="_blank" class="btn btn-primary btn-sm">Acessar Canal</a>
-            ${isAdmin ? `
-              <div class="mt-2 d-flex justify-content-between">
-                <button class="btn btn-warning btn-sm btn-editar" data-id="${canal.id}"><i class="fa fa-edit"></i></button>
-                <button class="btn btn-danger btn-sm btn-excluir" data-id="${canal.id}"><i class="fa fa-trash"></i></button>
-              </div>` : ""}
-          </div>
-        </div>
-      `;
-      catalogo.appendChild(card);
-    });
-  } catch (error) {
-    catalogo.innerHTML = `<p class="text-danger text-center">Erro ao carregar dados: ${error.message}</p>`;
+    const canais = await res.json();
+    renderizarCatalogo(canais);
+  } catch (err) {
+    alert("Erro ao carregar canais.");
+    console.error(err);
   } finally {
-    carregando.style.display = "none";
+    loadingScreen.style.display = "none";
   }
 }
 
-// Submete novo canal ou edita
-async function enviarCanal(event) {
-  event.preventDefault();
-
-  const nome = document.getElementById("nome").value.trim();
-  const link = document.getElementById("link").value.trim();
-  const descricao = document.getElementById("descricao").value.trim();
-  const imagem = document.getElementById("imagem").value.trim();
-
-  if (!nome || !link || !descricao) {
-    alert("Preencha todos os campos obrigatórios.");
-    return;
-  }
-
-  const canalData = {
-    nome,
-    link,
-    descricao,
-    imagem: imagem || null,
-  };
-
+async function verificarAdmin(userId, username) {
   try {
-    let res;
-    if (modoEdicao && canalEditandoId !== null) {
-      res = await fetch(`${BACKEND_URL}/canais/${canalEditandoId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(canalData),
-      });
-    } else {
-      res = await fetch(`${BACKEND_URL}/canais`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(canalData),
-      });
+    const res = await fetch(`${BACKEND_URL}/verificar_admin/${userId}`);
+    const json = await res.json();
+    if (json.admin) {
+      isAdmin = true;
+      document.getElementById("adminPanel").style.display = "block";
+      document.getElementById("adminUsername").textContent = `${username} (ID: ${userId})`;
     }
-
-    if (!res.ok) throw new Error("Erro ao salvar canal");
-
-    formulario.reset();
-    modoEdicao = false;
-    canalEditandoId = null;
-    formulario.querySelector("button[type='submit']").innerHTML = `<i class="fa fa-plus"></i> Adicionar Canal`;
-
-    await carregarCanais();
-  } catch (error) {
-    alert(error.message);
+  } catch (err) {
+    console.error("Erro ao verificar admin:", err);
   }
 }
 
-// Preenche formulário para edição
-function iniciarEdicao(id) {
-  const canal = canais.find((c) => c.id === id);
-  if (!canal) return;
-
-  modoEdicao = true;
-  canalEditandoId = id;
-
-  document.getElementById("nome").value = canal.nome;
-  document.getElementById("link").value = canal.link;
-  document.getElementById("descricao").value = canal.descricao;
-  document.getElementById("imagem").value = canal.imagem || "";
-
-  formulario.querySelector("button[type='submit']").innerHTML = `<i class="fa fa-save"></i> Salvar Alterações`;
-  adminPanel.scrollIntoView({ behavior: "smooth" });
-}
-
-// Exclui canal
-async function excluirCanal(id) {
-  if (!confirm("Tem certeza que deseja excluir este canal?")) return;
-
+async function uploadImagem(file) {
+  const formData = new FormData();
+  formData.append("file", file);
   try {
-    const res = await fetch(`${BACKEND_URL}/canais/${id}`, { method: "DELETE" });
-    if (!res.ok) throw new Error("Erro ao excluir canal");
-    await carregarCanais();
-  } catch (error) {
-    alert(error.message);
+    const res = await fetch(`${BACKEND_URL}/upload`, {
+      method: "POST",
+      body: formData,
+    });
+    const data = await res.json();
+    return data.url;
+  } catch {
+    alert("Erro ao enviar imagem.");
+    return null;
   }
 }
 
-// Eventos
-formulario.addEventListener("submit", enviarCanal);
-catalogo.addEventListener("click", (event) => {
-  if (event.target.closest(".btn-editar")) {
-    const id = parseInt(event.target.closest(".btn-editar").dataset.id);
-    iniciarEdicao(id);
+document.getElementById("formAdicionar").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const nome = e.target.nome.value;
+  const descricao = e.target.descricao.value;
+  const link = e.target.link.value;
+  const imagemFile = document.getElementById("imagemInput").files[0];
+  let imagemUrl = "";
+
+  if (imagemFile) {
+    imagemUrl = await uploadImagem(imagemFile);
+    if (!imagemUrl) return;
   }
-  if (event.target.closest(".btn-excluir")) {
-    const id = parseInt(event.target.closest(".btn-excluir").dataset.id);
-    excluirCanal(id);
-  }
+
+  await fetch(`${BACKEND_URL}/adicionar_canal`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ nome, descricao, link, imagem: imagemUrl }),
+  });
+
+  e.target.reset();
+  carregarCanais();
 });
 
-// Inicialização
-(async () => {
-  if (!tg.initDataUnsafe?.user) {
-    console.error("Usuário do Telegram não detectado.");
-    carregando.style.display = "none";
+async function excluirCanal(id) {
+  if (!confirm("Deseja excluir este canal?")) return;
+  await fetch(`${BACKEND_URL}/excluir_canal/${id}`, { method: "DELETE" });
+  carregarCanais();
+}
+
+function abrirModalEdicao(canal) {
+  const novoNome = prompt("Novo nome:", canal.nome);
+  const novoLink = prompt("Novo link:", canal.link);
+  const imagemFile = document.getElementById("imagemInput").files[0];
+
+  editarCanal(canal.id, novoNome, novoLink, imagemFile);
+}
+
+async function editarCanal(id, nome, link, imagemFile) {
+  let body = { nome, link };
+
+  if (imagemFile) {
+    const imagemUrl = await uploadImagem(imagemFile);
+    if (!imagemUrl) return;
+    body.imagem = imagemUrl;
+  }
+
+  await fetch(`${BACKEND_URL}/editar_canal/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  carregarCanais();
+}
+
+window.addEventListener("load", () => {
+  const tg = window.Telegram.WebApp;
+  const user = tg?.initDataUnsafe?.user;
+
+  if (!user) {
+    alert("Abra dentro do Telegram.");
     return;
   }
 
-  const userId = tg.initDataUnsafe.user.id;
-  const username = tg.initDataUnsafe.user.username || "Admin";
+  Telegram.WebApp.ready();
+  Telegram.WebApp.expand();
 
-  isAdmin = await verificarAdmin(userId);
-  if (isAdmin) {
-    adminPanel.classList.remove("d-none");
-    adminInfo.textContent = `Conectado como admin: ${username} (${userId})`;
-  }
-
-  await carregarCanais();
-})();
+  verificarAdmin(user.id, user.username).then(carregarCanais);
+});
