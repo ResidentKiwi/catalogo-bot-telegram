@@ -1,7 +1,7 @@
-const BACKEND_URL = "https://cat-logo-backend.onrender.com";
+const BACKEND_URL = "https://seu-backend.fly.dev"; // Substitua pelo seu
 
 let isAdmin = false;
-const loadingScreen = document.getElementById("loading");
+let loadingScreen;
 
 function criarCard(canal) {
   const col = document.createElement("div");
@@ -11,19 +11,20 @@ function criarCard(canal) {
       <img src="${canal.imagem}" class="card-img-top" alt="${canal.nome}">
       <div class="card-body d-flex flex-column">
         <h5 class="card-title">${canal.nome}</h5>
-        <p class="card-text flex-grow-1">${canal.descricao || ''}</p>
-        <a href="${canal.url}" target="_blank" class="btn btn-outline-light mt-auto">
-          <i class="fas fa-link me-1"></i>Acessar Canal
+        <p class="card-text flex-grow-1">${canal.descricao || ""}</p>
+        <a href="${canal.link || canal.url}" target="_blank" class="btn btn-outline-light mt-auto">
+          <i class="fas fa-link me-1"></i> Acessar Canal
         </a>
         ${isAdmin ? `
           <div class="mt-2 d-flex justify-content-between">
-            <button class="btn btn-sm btn-outline-warning" onclick='abrirModalEdicao(${JSON.stringify(canal)})'>
-              <i class="fas fa-edit"></i>
+            <button class="btn btn-sm btn-outline-secondary" onclick='abrirModalEdicao(${JSON.stringify(canal)})'>
+              <i class="fas fa-pen"></i>
             </button>
             <button class="btn btn-sm btn-outline-danger" onclick='excluirCanal(${canal.id})'>
               <i class="fas fa-trash"></i>
             </button>
-          </div>` : ""}
+          </div>
+        ` : ""}
       </div>
     </div>
   `;
@@ -37,14 +38,14 @@ function renderizarCatalogo(canais) {
 }
 
 async function carregarCanais() {
-  loadingScreen.style.display = "flex";
   try {
     const res = await fetch(`${BACKEND_URL}/canais`);
+    if (!res.ok) throw new Error(`Erro ${res.status}`);
     const canais = await res.json();
     renderizarCatalogo(canais);
   } catch (err) {
-    console.error(err);
-    alert("Erro ao carregar canais.");
+    console.error("Erro ao carregar canais:", err);
+    alert("Erro ao carregar canais. Verifique a conexão.");
   } finally {
     loadingScreen.style.display = "none";
   }
@@ -59,7 +60,7 @@ async function verificarAdmin(id) {
 async function uploadImagem(arquivo) {
   const formData = new FormData();
   formData.append("file", arquivo);
-  const res = await fetch(`${BACKEND_URL}/upload`, {
+  const res = await fetch(`${BACKEND_URL}/upload_imagem`, {
     method: "POST",
     body: formData,
   });
@@ -71,14 +72,18 @@ async function adicionarCanal(event) {
   event.preventDefault();
   const nome = document.getElementById("nome").value;
   const descricao = document.getElementById("descricao").value;
-  const url = document.getElementById("url").value;
+  const link = document.getElementById("url").value;
   const imagemArquivo = document.getElementById("imagemArquivo").files[0];
-  const imagemURL = await uploadImagem(imagemArquivo);
+  let imagemURL = "";
 
-  await fetch(`${BACKEND_URL}/canais`, {
+  if (imagemArquivo) {
+    imagemURL = await uploadImagem(imagemArquivo);
+  }
+
+  await fetch(`${BACKEND_URL}/adicionar_canal`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ nome, descricao, url, imagem: imagemURL }),
+    body: JSON.stringify({ nome, descricao, link, imagem: imagemURL }),
   });
 
   document.getElementById("canalForm").reset();
@@ -89,7 +94,7 @@ function abrirModalEdicao(canal) {
   document.getElementById("editId").value = canal.id;
   document.getElementById("editNome").value = canal.nome;
   document.getElementById("editDescricao").value = canal.descricao;
-  document.getElementById("editUrl").value = canal.url;
+  document.getElementById("editUrl").value = canal.link || canal.url;
   new bootstrap.Modal(document.getElementById("editarModal")).show();
 }
 
@@ -98,16 +103,16 @@ async function editarCanal(event) {
   const id = document.getElementById("editId").value;
   const nome = document.getElementById("editNome").value;
   const descricao = document.getElementById("editDescricao").value;
-  const url = document.getElementById("editUrl").value;
+  const link = document.getElementById("editUrl").value;
   const imagemArquivo = document.getElementById("editImagemArquivo").files[0];
-  let body = { nome, descricao, url };
+  let body = { nome, descricao, link };
 
   if (imagemArquivo) {
     const imagemURL = await uploadImagem(imagemArquivo);
     body.imagem = imagemURL;
   }
 
-  await fetch(`${BACKEND_URL}/canais/${id}`, {
+  await fetch(`${BACKEND_URL}/editar_canal/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -119,11 +124,13 @@ async function editarCanal(event) {
 
 async function excluirCanal(id) {
   if (!confirm("Deseja mesmo excluir este canal?")) return;
-  await fetch(`${BACKEND_URL}/canais/${id}`, { method: "DELETE" });
+  await fetch(`${BACKEND_URL}/excluir_canal/${id}`, { method: "DELETE" });
   carregarCanais();
 }
 
 window.onload = async () => {
+  loadingScreen = document.getElementById("loading");
+
   if (!window.Telegram?.WebApp?.initDataUnsafe) {
     alert("Execute dentro do Telegram.");
     return;
