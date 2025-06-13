@@ -103,6 +103,7 @@ document.getElementById("add-channel-form").addEventListener("submit", async e =
 
   const nome = document.getElementById("nome").value;
   const url = document.getElementById("link").value;
+  const descricao = document.getElementById("descricao").value;
   let imagem = document.getElementById("imagem-url").value;
   const file = document.getElementById("imagem-arquivo").files[0];
 
@@ -114,7 +115,7 @@ document.getElementById("add-channel-form").addEventListener("submit", async e =
     imagem = result.url;
   }
 
-  const body = { nome, url, imagem, user_id: userId };
+  const body = { nome, url, descricao, imagem, user_id: userId };
   await fetch(`${API_BASE_URL}/canais`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
