@@ -6,12 +6,28 @@ tg.expand();
 let usuarioTelegram = {};
 let canais = [];
 
-async function init() {
-  try {
-    console.log("🔍 tg.initDataUnsafe:", tg.initDataUnsafe);
+window.Telegram.WebApp.ready(); // Aguarda Telegram SDK
 
-    const initData = tg.initDataUnsafe?.user;
-    if (!initData) throw new Error("Usuário do Telegram não identificado.");
+window.addEventListener("DOMContentLoaded", () => {
+  // Pequeno atraso para garantir que initDataUnsafe esteja disponível
+  setTimeout(init, 200);
+});
+
+async function init() {
+  console.log("Iniciando WebApp com Telegram SDK...");
+
+  try {
+    let initData = tg.initDataUnsafe?.user;
+
+    if (!initData) {
+      console.warn("⚠️ Dados do Telegram não disponíveis. Ativando modo de teste local.");
+      initData = {
+        id: 123456789,
+        username: "teste_admin",
+        first_name: "Admin",
+        last_name: "Local"
+      };
+    }
 
     usuarioTelegram = {
       id: initData.id,
@@ -19,28 +35,19 @@ async function init() {
       nome: initData.first_name + (initData.last_name ? " " + initData.last_name : "")
     };
 
-    console.log("🙋‍♂️ Usuário identificado:", usuarioTelegram);
-
     const respostaAdmin = await fetch(`${BACKEND_URL}/verificar-admin/${usuarioTelegram.id}`);
     const { admin } = await respostaAdmin.json();
 
     if (admin) {
       document.getElementById("adminPanel").classList.remove("d-none");
-      document.getElementById("formulario").addEventListener("submit", adicionarCanal);
       document.getElementById("adminInfo").innerText = `Conectado como admin: ${usuarioTelegram.username} (ID ${usuarioTelegram.id})`;
+      document.getElementById("formulario").addEventListener("submit", adicionarCanal);
     }
 
     await carregarCanais();
   } catch (error) {
-    console.error("❌ Erro ao iniciar app:", error);
-    document.getElementById("catalogo").innerHTML = `
-      <div class="text-center text-danger mt-4">
-        Erro ao carregar o aplicativo.<br />
-        Verifique se você está acessando através do Telegram WebApp.
-      </div>
-    `;
-  } finally {
-    document.getElementById("carregando").style.display = "none";
+    console.error("Erro ao iniciar app:", error);
+    document.getElementById("carregando").innerText = "Erro ao carregar dados.";
   }
 }
 
@@ -48,6 +55,7 @@ async function carregarCanais() {
   const resposta = await fetch(`${BACKEND_URL}/listar-canais`);
   canais = await resposta.json();
   renderizarCatalogo(canais);
+  document.getElementById("carregando").style.display = "none";
 }
 
 function renderizarCatalogo(lista) {
@@ -102,6 +110,4 @@ async function adicionarCanal(evento) {
   } else {
     alert("Erro ao adicionar canal.");
   }
-}
-
-window.addEventListener("DOMContentLoaded", init);
+    }
