@@ -1,4 +1,4 @@
-const BACKEND_URL = "https://seu-backend.onrender.com"; // ajuste para seu backend correto
+const BACKEND_URL = "https://cat-logo-backend.onrender.com"; // ajuste para seu backend correto
 
 const tg = window.Telegram.WebApp;
 tg.expand();
