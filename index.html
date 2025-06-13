@@ -14,6 +14,15 @@
     <div class="spinner-border text-light" role="status"></div>
   </div>
 
+  <div id="erro" class="alert alert-danger d-none" role="alert">
+    <strong>Erro ao carregar os dados!</strong><br>
+    Verifique sua conexão ou tente novamente mais tarde.
+    <div id="detalhesErro" class="mt-2 small text-break"></div>
+    <button onclick="window.location.reload()" class="btn btn-outline-light mt-3">
+      Recarregar página
+    </button>
+  </div>
+
   <div id="adminPanel" class="admin-panel d-none">
     <div class="card p-3 mb-3">
       <p id="adminInfo" class="mb-2">
