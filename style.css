@@ -55,6 +55,16 @@ body {
   z-index: 2000;
 }
 
+#erro {
+  position: fixed;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 90%;
+  z-index: 3000;
+  text-align: center;
+}
+
 input[type="file"]::file-selector-button {
   background-color: #444;
   color: #fff;
