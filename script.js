@@ -1,4 +1,4 @@
-const BACKEND_URL = "https://seu-backend.fly.dev"; // Substitua pelo seu
+const BACKEND_URL = "https://cat-logo-backend.onrender.com/"; // Substitua pelo seu
 
 let isAdmin = false;
 let loadingScreen;
