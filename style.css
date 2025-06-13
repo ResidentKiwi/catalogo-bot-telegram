@@ -1,125 +1,50 @@
-/* Estilo global */
 body {
-  background-color: #121212;
-  color: #f0f0f0;
   font-family: 'Segoe UI', sans-serif;
+  background-color: #121212;
+  color: white;
 }
 
-h1 {
-  color: #ffffff;
-  font-weight: 600;
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-/* Cartões de canais */
 .card {
   background-color: #1e1e1e;
-  border: 1px solid #2e2e2e;
-  border-radius: 12px;
-  overflow: hidden;
-  transition: transform 0.2s ease-in-out;
+  border: none;
+  transition: transform 0.2s ease;
 }
 
 .card:hover {
-  transform: scale(1.02);
-  box-shadow: 0 0 12px rgba(255, 255, 255, 0.08);
+  transform: translateY(-3px);
 }
 
-.card-title {
-  color: #ffffff !important;
-  font-weight: 500;
+.card-img-top {
+  max-height: 200px;
+  object-fit: cover;
 }
 
-.card-text {
-  color: #e0e0e0 !important;
-}
-
-.card a {
-  color: #ffffff;
-}
-
-/* Botões */
-.btn-primary {
-  background-color: #4e9af1;
-  border: none;
-}
-
-.btn-outline-success {
-  border-color: #4CAF50;
-  color: #4CAF50;
-}
-
-.btn-outline-success:hover {
-  background-color: #4CAF50;
+.admin-panel .form-control {
+  background-color: #2c2c2c;
   color: white;
-}
-
-.btn-warning {
-  background-color: #ffa500;
-  border: none;
-  color: white;
-}
-
-.btn-warning:hover {
-  background-color: #e59400;
-}
-
-.btn-danger {
-  background-color: #d9534f;
-  border: none;
-  color: white;
-}
-
-.btn-danger:hover {
-  background-color: #c9302c;
-}
-
-/* Painel Admin */
-#adminPanel {
-  position: relative;
-  top: 0;
-  margin-bottom: 2rem;
-  background-color: #1f1f1f;
-  border: 1px solid #333;
-  border-radius: 12px;
-  padding: 1.5rem;
-}
-
-#adminPanel h4 {
-  color: #ffffff;
-}
-
-#adminPanel input,
-#adminPanel textarea {
-  background-color: #2b2b2b;
-  color: #f0f0f0;
   border: 1px solid #444;
 }
 
-#adminPanel input:focus,
-#adminPanel textarea:focus {
-  background-color: #333;
-  border-color: #4e9af1;
+.admin-panel .form-control::placeholder {
+  color: #bbb;
+}
+
+.btn-outline-light {
   color: white;
+  border-color: white;
 }
 
-/* Ícones nos botões */
-.fa-icon {
-  margin-right: 6px;
+.btn-outline-light:hover {
+  background-color: white;
+  color: #121212;
 }
 
-/* Responsividade */
-@media (max-width: 768px) {
-  .card {
-    margin-bottom: 1.5rem;
-  }
-
-  h1 {
-    font-size: 1.5rem;
-  }
-
-  #adminPanel {
-    padding: 1rem;
-  }
+.loading-overlay {
+  position: fixed;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.8);
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
