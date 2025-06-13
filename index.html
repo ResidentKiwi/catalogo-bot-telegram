@@ -34,21 +34,22 @@
   </div>
 
   <!-- Formulário de Edição de Canal -->
-  <div id="edit-form-container" class="container d-none mb-4">
-    <div class="card p-4">
-      <h6 class="mb-3 text-muted"><i class="fas fa-edit me-1"></i> Editar Canal</h6>
-      <form id="edit-channel-form">
-        <input type="text" id="edit-nome" class="form-control mb-2" placeholder="Nome do Canal" required>
-        <input type="url" id="edit-link" class="form-control mb-2" placeholder="Link do Canal" required>
-        <input type="text" id="edit-imagem-url" class="form-control mb-2" placeholder="URL da nova imagem (opcional)">
-        <input type="file" id="edit-imagem-arquivo" class="form-control mb-2" accept="image/*">
-        <img id="edit-preview" class="image-preview d-none">
-        <button type="submit" class="btn btn-success mt-2">
-          <i class="fas fa-check"></i> Salvar Alterações
-        </button>
-      </form>
-    </div>
+<div id="edit-form-container" class="container d-none mb-4">
+  <div class="card p-4">
+    <h6 class="mb-3 text-muted"><i class="fas fa-edit me-1"></i> Editar Canal</h6>
+    <form id="edit-channel-form">
+      <input type="text" id="edit-nome" class="form-control mb-2" placeholder="Nome do Canal" required>
+      <input type="url" id="edit-link" class="form-control mb-2" placeholder="Link do Canal" required>
+      <textarea id="edit-descricao" class="form-control mb-2" rows="2" placeholder="Descrição do Canal (opcional)"></textarea>
+      <input type="text" id="edit-imagem-url" class="form-control mb-2" placeholder="URL da nova imagem (opcional)">
+      <input type="file" id="edit-imagem-arquivo" class="form-control mb-2" accept="image/*">
+      <img id="edit-preview" class="image-preview d-none">
+      <button type="submit" class="btn btn-success mt-2">
+        <i class="fas fa-check"></i> Salvar Alterações
+      </button>
+    </form>
   </div>
+</div>
 
   <!-- Lista de Canais -->
   <div id="canal-lista" class="container"></div>
