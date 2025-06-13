@@ -1,83 +1,191 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Catálogo de Canais</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://kit.fontawesome.com/a2c5c4e6f4.js" crossorigin="anonymous"></script>
   <style>
     body {
       background-color: #121212;
-      color: #ffffff;
+      color: #fff;
       padding: 1rem;
       font-family: 'Segoe UI', sans-serif;
     }
+
     .card {
-      background-color: #1f1f1f;
+      background-color: #1e1e1e;
       color: #fff;
       margin-bottom: 1rem;
+      border: none;
+      border-radius: 1rem;
     }
-    .admin-panel {
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-      background-color: #121212;
-      padding-bottom: 1rem;
-      margin-bottom: 1rem;
-    }
+
     .form-control, .form-select {
-      background-color: #2a2a2a;
+      background-color: #2c2c2c;
       color: #fff;
       border: none;
     }
+
+    .form-control::placeholder {
+      color: #aaa;
+    }
+
     .btn-primary {
       background-color: #0d6efd;
     }
+
     .btn-danger {
       background-color: #dc3545;
     }
+
+    .admin-panel {
+      position: sticky;
+      top: 0;
+      z-index: 999;
+      background-color: #121212;
+      padding-bottom: 1rem;
+    }
+
     #loading {
-      text-align: center;
-      margin-top: 2rem;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2000;
+    }
+
+    #listaCanais {
+      margin-top: 1rem;
+    }
+
+    #adminInfo {
+      font-size: 0.9rem;
+      color: #bbb;
+    }
+
+    input[type="file"]::file-selector-button {
+      background-color: #444;
+      color: #fff;
+      border: none;
+      padding: 0.4rem 0.8rem;
+      border-radius: 0.4rem;
+      margin-right: 0.5rem;
     }
   </style>
 </head>
 <body>
 
+  <div id="loading">
+    <div class="spinner-border text-light" role="status"></div>
+  </div>
+
   <div class="admin-panel" id="adminPanel" style="display: none;">
     <div class="card p-3">
-      <h5>Administração</h5>
+      <p id="adminInfo" class="mb-2">
+        <i class="fas fa-user-shield"></i> Conectado como: <strong id="adminUsername"></strong>
+      </p>
+      <h5>Adicionar novo canal</h5>
       <form id="formAdicionar">
-        <input class="form-control mb-2" name="nome" placeholder="Nome do canal" required>
-        <input class="form-control mb-2" name="link" placeholder="Link do canal" required>
-        <input class="form-control mb-2" type="file" id="imagemInput" accept="image/*">
+        <input class="form-control mb-2" name="nome" placeholder="Nome do Canal" required />
+        <input class="form-control mb-2" name="descricao" placeholder="Descrição" />
+        <input class="form-control mb-2" name="link" placeholder="Link do Canal" required />
+        <input class="form-control mb-3" type="file" id="imagemInput" accept="image/*" />
         <button type="submit" class="btn btn-success w-100">
           <i class="fas fa-plus"></i> Adicionar Canal
         </button>
       </form>
-      <p class="mt-2 text-white-50" id="adminInfo"></p>
     </div>
   </div>
 
-  <div id="loading"><div class="spinner-border text-light" role="status"></div></div>
   <div id="listaCanais" class="row"></div>
 
   <script>
-    const API_BASE_URL = 'https://seu-backend.fly.dev'; // troque para o domínio correto
+    const API_BASE_URL = 'https://seu-backend.fly.dev'; // Atualize com seu domínio correto
     const tg = window.Telegram.WebApp;
     let user = tg.initDataUnsafe.user;
     let isAdmin = false;
 
     async function verificarAdmin() {
-      const res = await fetch(`${API_BASE_URL}/verificar_admin/${user.id}`);
-      const data = await res.json();
-      isAdmin = data.admin;
-      if (isAdmin) {
-        document.getElementById('adminPanel').style.display = 'block';
-        document.getElementById('adminInfo').textContent = `Conectado como admin: ${user.username} (ID ${user.id})`;
+      try {
+        const res = await fetch(`${API_BASE_URL}/verificar_admin/${user.id}`);
+        const data = await res.json();
+        isAdmin = data.admin;
+        if (isAdmin) {
+          document.getElementById('adminPanel').style.display = 'block';
+          document.getElementById('adminUsername').textContent = `${user.username} (ID: ${user.id})`;
+        }
+      } catch (err) {
+        console.error('Erro ao verificar admin:', err);
       }
+    }
+
+    async function carregarCanais() {
+      try {
+        const res = await fetch(`${API_BASE_URL}/canais`);
+        const canais = await res.json();
+        const container = document.getElementById('listaCanais');
+        container.innerHTML = '';
+        canais.forEach(canal => {
+          const col = document.createElement('div');
+          col.className = 'col-12 col-md-6';
+          col.innerHTML = `
+            <div class="card">
+              <img src="${canal.imagem}" class="card-img-top" alt="${canal.nome}">
+              <div class="card-body">
+                <h5 class="card-title">${canal.nome}</h5>
+                <p class="card-text">${canal.descricao || ''}</p>
+                <a href="${canal.link}" target="_blank" class="btn btn-primary mb-2 w-100">
+                  <i class="fab fa-telegram-plane"></i> Acessar
+                </a>
+                ${isAdmin ? `
+                  <div class="d-flex justify-content-between">
+                    <button class="btn btn-sm btn-warning me-2 w-50" onclick="editarCanal(${canal.id})">
+                      <i class="fas fa-edit"></i> Editar
+                    </button>
+                    <button class="btn btn-sm btn-danger w-50" onclick="excluirCanal(${canal.id})">
+                      <i class="fas fa-trash-alt"></i> Excluir
+                    </button>
+                  </div>` : ''}
+              </div>
+            </div>
+          `;
+          container.appendChild(col);
+        });
+      } catch (err) {
+        alert('Erro ao carregar canais.');
+        console.error(err);
+      } finally {
+        document.getElementById('loading').style.display = 'none';
+      }
+    }
+
+    async function excluirCanal(id) {
+      if (!confirm('Tem certeza que deseja excluir este canal?')) return;
+      await fetch(`${API_BASE_URL}/excluir_canal/${id}`, { method: 'DELETE' });
+      carregarCanais();
+    }
+
+    async function editarCanal(id) {
+      const nome = prompt('Novo nome:');
+      const link = prompt('Novo link:');
+      const imagemFile = document.getElementById('imagemInput').files[0];
+      let imagemUrl = '';
+      if (imagemFile) {
+        imagemUrl = await uploadImagem(imagemFile);
+        if (!imagemUrl) return;
+      }
+      const body = { nome, link };
+      if (imagemUrl) body.imagem = imagemUrl;
+
+      await fetch(`${API_BASE_URL}/editar_canal/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      carregarCanais();
     }
 
     async function uploadImagem(file) {
@@ -91,75 +199,16 @@
         if (!response.ok) throw new Error();
         const data = await response.json();
         return data.url;
-      } catch (e) {
-        alert("Erro ao enviar imagem.");
+      } catch {
+        alert('Erro ao enviar imagem.');
         return null;
       }
-    }
-
-    async function carregarCanais() {
-      const res = await fetch(`${API_BASE_URL}/canais`);
-      const canais = await res.json();
-      const container = document.getElementById('listaCanais');
-      container.innerHTML = '';
-      canais.forEach(canal => {
-        const col = document.createElement('div');
-        col.className = 'col-12 col-md-6';
-        col.innerHTML = `
-          <div class="card">
-            <img src="${canal.imagem}" class="card-img-top" alt="${canal.nome}">
-            <div class="card-body">
-              <h5 class="card-title">${canal.nome}</h5>
-              <a href="${canal.link}" target="_blank" class="btn btn-primary mb-2">
-                <i class="fab fa-telegram-plane"></i> Acessar
-              </a>
-              ${isAdmin ? `
-              <button class="btn btn-sm btn-warning me-2" onclick="editarCanal(${canal.id})">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-sm btn-danger" onclick="excluirCanal(${canal.id})">
-                <i class="fas fa-trash-alt"></i>
-              </button>` : ''}
-            </div>
-          </div>
-        `;
-        container.appendChild(col);
-      });
-      document.getElementById('loading').style.display = 'none';
-    }
-
-    async function editarCanal(id) {
-      const nome = prompt('Novo nome:');
-      const link = prompt('Novo link:');
-      const imagemFile = document.getElementById('imagemInput').files[0];
-      let imagemUrl = '';
-
-      if (imagemFile) {
-        imagemUrl = await uploadImagem(imagemFile);
-        if (!imagemUrl) return;
-      }
-
-      const body = { nome, link };
-      if (imagemUrl) body.imagem = imagemUrl;
-
-      await fetch(`${API_BASE_URL}/editar_canal/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-
-      carregarCanais();
-    }
-
-    async function excluirCanal(id) {
-      if (!confirm('Deseja excluir este canal?')) return;
-      await fetch(`${API_BASE_URL}/excluir_canal/${id}`, { method: 'DELETE' });
-      carregarCanais();
     }
 
     document.getElementById('formAdicionar').addEventListener('submit', async (e) => {
       e.preventDefault();
       const nome = e.target.nome.value;
+      const descricao = e.target.descricao.value;
       const link = e.target.link.value;
       const imagemFile = document.getElementById('imagemInput').files[0];
       let imagemUrl = '';
@@ -172,7 +221,7 @@
       await fetch(`${API_BASE_URL}/adicionar_canal`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nome, link, imagem: imagemUrl })
+        body: JSON.stringify({ nome, descricao, link, imagem: imagemUrl })
       });
 
       e.target.reset();
