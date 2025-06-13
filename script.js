@@ -52,7 +52,7 @@ async function carregarCanais() {
 }
 
 async function verificarAdmin(id) {
-  const res = await fetch(`${BACKEND_URL}/verificar_admin/${id}`);
+  const res = await fetch(`${BACKEND_URL}/admins/${id}`);
   const json = await res.json();
   return json.admin === true;
 }
@@ -60,7 +60,7 @@ async function verificarAdmin(id) {
 async function uploadImagem(arquivo) {
   const formData = new FormData();
   formData.append("file", arquivo);
-  const res = await fetch(`${BACKEND_URL}/upload_imagem`, {
+  const res = await fetch(`${BACKEND_URL}/upload`, {
     method: "POST",
     body: formData,
   });
@@ -80,10 +80,10 @@ async function adicionarCanal(event) {
     imagemURL = await uploadImagem(imagemArquivo);
   }
 
-  await fetch(`${BACKEND_URL}/adicionar_canal`, {
+  await fetch(`${BACKEND_URL}/canais`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ nome, descricao, link, imagem: imagemURL }),
+    body: JSON.stringify({ nome, descricao, url: link, imagem: imagemURL }),
   });
 
   document.getElementById("canalForm").reset();
@@ -105,14 +105,14 @@ async function editarCanal(event) {
   const descricao = document.getElementById("editDescricao").value;
   const link = document.getElementById("editUrl").value;
   const imagemArquivo = document.getElementById("editImagemArquivo").files[0];
-  let body = { nome, descricao, link };
+  let body = { nome, descricao, url: link };
 
   if (imagemArquivo) {
     const imagemURL = await uploadImagem(imagemArquivo);
     body.imagem = imagemURL;
   }
 
-  await fetch(`${BACKEND_URL}/editar_canal/${id}`, {
+  await fetch(`${BACKEND_URL}/canais/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -124,7 +124,7 @@ async function editarCanal(event) {
 
 async function excluirCanal(id) {
   if (!confirm("Deseja mesmo excluir este canal?")) return;
-  await fetch(`${BACKEND_URL}/excluir_canal/${id}`, { method: "DELETE" });
+  await fetch(`${BACKEND_URL}/canais/${id}`, { method: "DELETE" });
   carregarCanais();
 }
 
