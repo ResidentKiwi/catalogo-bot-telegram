@@ -72,6 +72,7 @@ function abrirEditor(c) {
   document.getElementById("edit-nome").value = c.nome;
   document.getElementById("edit-link").value = c.url;
   document.getElementById("edit-imagem-url").value = c.imagem || "";
+  document.getElementById("edit-descricao").value = c.descricao || "";
   const preview = document.getElementById("edit-preview");
   if (c.imagem) {
     preview.src = c.imagem;
@@ -133,6 +134,7 @@ document.getElementById("edit-channel-form").addEventListener("submit", async e 
 
   const nome = document.getElementById("edit-nome").value;
   const url = document.getElementById("edit-link").value;
+  const descricao = document.getElementById("edit-descricao").value;
   let imagem = document.getElementById("edit-imagem-url").value;
   const file = document.getElementById("edit-imagem-arquivo").files[0];
 
@@ -144,7 +146,7 @@ document.getElementById("edit-channel-form").addEventListener("submit", async e 
     imagem = result.url;
   }
 
-  const body = { nome, url, imagem, user_id: userId };
+  const body = { nome, url, descricao, imagem, user_id: userId };
 
   await fetch(`${API_BASE_URL}/canais/${canalEditando.id}`, {
     method: "PUT",
