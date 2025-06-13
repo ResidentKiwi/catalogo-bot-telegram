@@ -59,7 +59,8 @@ function previewImage() {
     };
     reader.readAsDataURL(file);
   } else {
-    preview.src=""; preview.classList.add("d-none");
+    preview.src = "";
+    preview.classList.add("d-none");
   }
 }
 
@@ -69,13 +70,19 @@ async function editarCanal(c) {
   if (!nome || !url) return;
   const imagem = prompt("Nova imagem (URL):", c.imagem || "");
   const body = { nome, url, imagem, user_id: userId };
-  await fetch(`${API_BASE_URL}/canais/${c.id}`, { method: "PUT", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body) });
+  await fetch(`${API_BASE_URL}/canais/${c.id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
   carregarCanais();
 }
 
 async function excluirCanal(canalId) {
   if (!confirm("Confirma exclusão?")) return;
-  await fetch(`${API_BASE_URL}/canais/${canalId}?user_id=${userId}`, { method: "DELETE" });
+  await fetch(`${API_BASE_URL}/canais/${canalId}?user_id=${userId}`, {
+    method: "DELETE"
+  });
   carregarCanais();
 }
 
@@ -83,20 +90,33 @@ document.getElementById("imagem-arquivo").addEventListener("change", previewImag
 
 document.getElementById("add-channel-form").addEventListener("submit", async e => {
   e.preventDefault();
+
+  const nome = document.getElementById("nome").value;
+  const url = document.getElementById("link").value;
   let imagem = document.getElementById("imagem-url").value;
   const file = document.getElementById("imagem-arquivo").files[0];
+
   if (file) {
-    const form = new FormData(); form.append("file", file);
-    const res = await fetch(`${API_BASE_URL}/upload`, { method: "POST", body: form });
-    imagem = (await res.json()).url;
+    const form = new FormData();
+    form.append("file", file);
+    const res = await fetch(`${API_BASE_URL}/upload`, {
+      method: "POST",
+      body: form
+    });
+    const result = await res.json();
+    imagem = result.url;
   }
-  const body = { nome: e.target.nome.value, url: e.target.link.value, imagem, user_id: userId };
+
+  const body = { nome, url, imagem, user_id: userId };
+
   await fetch(`${API_BASE_URL}/canais`, {
     method: "POST",
-    headers: {"Content-Type":"application/json"},
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body)
   });
-  e.target.reset(); document.getElementById("preview").classList.add("d-none");
+
+  e.target.reset();
+  document.getElementById("preview").classList.add("d-none");
   carregarCanais();
 });
 
