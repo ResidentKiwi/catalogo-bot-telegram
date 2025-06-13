@@ -1,69 +1,46 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Catálogo de Canais</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-papnQKm+0uKxFRqLGUAZsQwKk9kkiVZq/2wKuvZIznFRCcWBNEXC1gWulGYc8YKYiBChBShD8u9UM88FzKH9mQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <title>Catálogo de Canais</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Script do Telegram WebApp (deve ser carregado antes de outros scripts) -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="loading">
-    <div class="spinner-border text-light" role="status"></div>
-  </div>
-
-  <div id="erro" class="alert alert-danger d-none" role="alert">
-    <strong>Erro ao carregar os dados!</strong><br>
-    Verifique sua conexão ou tente novamente mais tarde.
-    <div id="detalhesErro" class="mt-2 small text-break"></div>
-    <button onclick="window.location.reload()" class="btn btn-outline-light mt-3">
-      Recarregar página
-    </button>
-  </div>
-
-  <div id="adminPanel" class="admin-panel d-none">
-    <div class="card p-3 mb-3">
-      <p id="adminInfo" class="mb-2">
-        <i class="fas fa-user-shield"></i> Conectado como: <strong id="adminUsername"></strong> (ID: <span id="adminUserId"></span>)
-      </p>
-      <form id="canalForm">
-        <input class="form-control mb-2" id="nome" placeholder="Nome do Canal" required />
-        <input class="form-control mb-2" id="descricao" placeholder="Descrição" />
-        <input class="form-control mb-2" id="url" placeholder="Link do Canal" required />
-        <input class="form-control mb-2" type="file" id="imagemArquivo" accept="image/*" />
-        <button type="submit" class="btn btn-success w-100">
-          <i class="fas fa-plus"></i> Adicionar Canal
-        </button>
-      </form>
+    <!-- Aviso exibido quando não aberto no Telegram -->
+    <div id="outside-message" style="display: none; text-align: center; margin-top: 50px;">
+        <p>⚠️ Este aplicativo deve ser aberto dentro do Telegram!</p>
     </div>
-  </div>
 
-  <div class="row" id="catalogo"></div>
+    <!-- Conteúdo principal (visível dentro do Telegram) -->
+    <div id="app-content">
+        <!-- Painel de administração (visível apenas para admins) -->
+        <div id="admin-panel" style="display: none;">
+            <h2>Administração de Canais</h2>
+            <form id="add-channel-form">
+                <!-- Armazena URL antiga da imagem quando editando -->
+                <input type="hidden" id="old-image-url" value="">
+                <label for="channel-name">Nome:</label>
+                <input type="text" id="channel-name" required placeholder="Nome do canal">
+                <label for="channel-desc">Descrição:</label>
+                <textarea id="channel-desc" required placeholder="Descrição do canal"></textarea>
+                <label for="channel-link">Link:</label>
+                <input type="url" id="channel-link" required placeholder="Link do canal">
+                <label for="channel-image">Imagem:</label>
+                <input type="file" id="channel-image" accept="image/*">
+                <!-- Preview da imagem selecionada -->
+                <img id="image-preview" src="" alt="Preview da imagem" style="display: none; max-width: 100%; margin-top: 10px;">
+                <button type="submit">Adicionar Canal</button>
+            </form>
+        </div>
 
-  <!-- Modal de edição -->
-  <div class="modal fade" id="editarModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-      <form id="editarForm" class="modal-content bg-dark text-white">
-        <div class="modal-header">
-          <h5 class="modal-title">Editar Canal</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <input type="hidden" id="editId" />
-          <input class="form-control mb-2" id="editNome" placeholder="Nome do Canal" required />
-          <input class="form-control mb-2" id="editDescricao" placeholder="Descrição" />
-          <input class="form-control mb-2" id="editUrl" placeholder="Link do Canal" required />
-          <input class="form-control mb-2" type="file" id="editImagemArquivo" accept="image/*" />
-        </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-primary w-100">Salvar Alterações</button>
-        </div>
-      </form>
+        <!-- Lista de cartões de canais -->
+        <div id="channels-container"></div>
     </div>
-  </div>
 
-  <script src="script.js"></script>
+    <!-- Script principal do app -->
+    <script src="script.js"></script>
 </body>
 </html>
