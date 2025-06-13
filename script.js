@@ -17,14 +17,13 @@ function criarCard(canal) {
         </a>
         ${isAdmin ? `
           <div class="mt-2 d-flex justify-content-between">
-            <button class="btn btn-sm btn-outline-secondary" onclick='abrirModalEdicao(${JSON.stringify(canal)})'>
-              <i class="fas fa-pen"></i>
+            <button class="btn btn-sm btn-outline-warning" onclick='abrirModalEdicao(${JSON.stringify(canal)})'>
+              <i class="fas fa-edit"></i>
             </button>
             <button class="btn btn-sm btn-outline-danger" onclick='excluirCanal(${canal.id})'>
               <i class="fas fa-trash"></i>
             </button>
-          </div>` : ""
-        }
+          </div>` : ""}
       </div>
     </div>
   `;
@@ -52,7 +51,7 @@ async function carregarCanais() {
 }
 
 async function verificarAdmin(id) {
-  const res = await fetch(`${BACKEND_URL}/admins/${id}`);
+  const res = await fetch(`${BACKEND_URL}/verificar_admin/${id}`);
   const json = await res.json();
   return json.admin === true;
 }
