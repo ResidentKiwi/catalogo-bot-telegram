@@ -21,16 +21,20 @@ async function carregarCanais() {
   container.innerHTML = "";
   canais.forEach(c => {
     const card = document.createElement("div");
-    card.className = "card p-3";
+    card.className = "card";
+
     card.innerHTML = `
+      ${c.imagem ? `<img src="${c.imagem}" class="image-preview" alt="Imagem do canal">` : ""}
       <h5>${c.nome}</h5>
-      <a href="${c.url}" target="_blank" class="btn btn-primary btn-sm mb-2">
+      <p>${c.descricao || "Sem descrição disponível."}</p>
+      <a href="${c.url}" target="_blank" class="btn btn-primary btn-sm">
         <i class="fas fa-paper-plane"></i> Acessar Canal
       </a>
-      ${c.imagem ? `<img src="${c.imagem}" class="image-preview mt-2" alt="Imagem do canal">` : ""}
       <div class="mt-2 admin-buttons"></div>
     `;
+
     container.appendChild(card);
+
     if (window.userIsAdmin) {
       const btns = card.querySelector(".admin-buttons");
       btns.innerHTML = `
