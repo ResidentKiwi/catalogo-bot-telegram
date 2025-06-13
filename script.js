@@ -6,59 +6,28 @@ let loadingScreen;
 function criarCard(canal) {
   const col = document.createElement("div");
   col.className = "col-md-4 mb-4";
-
-  const card = document.createElement("div");
-  card.className = "card h-100 shadow-sm";
-
-  const img = document.createElement("img");
-  img.src = canal.imagem;
-  img.className = "card-img-top";
-  img.alt = canal.nome;
-
-  const cardBody = document.createElement("div");
-  cardBody.className = "card-body d-flex flex-column";
-
-  const title = document.createElement("h5");
-  title.className = "card-title";
-  title.textContent = canal.nome;
-
-  const desc = document.createElement("p");
-  desc.className = "card-text flex-grow-1";
-  desc.textContent = canal.descricao || "";
-
-  const linkBtn = document.createElement("a");
-  linkBtn.href = canal.link || canal.url;
-  linkBtn.target = "_blank";
-  linkBtn.className = "btn btn-outline-light mt-auto";
-  linkBtn.innerHTML = `<i class="fas fa-link me-1"></i> Acessar Canal`;
-
-  cardBody.appendChild(title);
-  cardBody.appendChild(desc);
-  cardBody.appendChild(linkBtn);
-
-  if (isAdmin) {
-    const btnGroup = document.createElement("div");
-    btnGroup.className = "mt-2 d-flex justify-content-between";
-
-    const editarBtn = document.createElement("button");
-    editarBtn.className = "btn btn-sm btn-outline-secondary";
-    editarBtn.innerHTML = `<i class="fas fa-pen"></i>`;
-    editarBtn.addEventListener("click", () => abrirModalEdicao(canal));
-
-    const excluirBtn = document.createElement("button");
-    excluirBtn.className = "btn btn-sm btn-outline-danger";
-    excluirBtn.innerHTML = `<i class="fas fa-trash"></i>`;
-    excluirBtn.addEventListener("click", () => excluirCanal(canal.id));
-
-    btnGroup.appendChild(editarBtn);
-    btnGroup.appendChild(excluirBtn);
-    cardBody.appendChild(btnGroup);
-  }
-
-  card.appendChild(img);
-  card.appendChild(cardBody);
-  col.appendChild(card);
-
+  col.innerHTML = `
+    <div class="card h-100 shadow-sm">
+      <img src="${canal.imagem}" class="card-img-top" alt="${canal.nome}">
+      <div class="card-body d-flex flex-column">
+        <h5 class="card-title">${canal.nome}</h5>
+        <p class="card-text flex-grow-1">${canal.descricao || ""}</p>
+        <a href="${canal.link || canal.url}" target="_blank" class="btn btn-outline-light mt-auto">
+          <i class="fas fa-link me-1"></i> Acessar Canal
+        </a>
+        ${isAdmin ? `
+          <div class="mt-2 d-flex justify-content-between">
+            <button class="btn btn-sm btn-outline-secondary" onclick='abrirModalEdicao(${JSON.stringify(canal)})'>
+              <i class="fas fa-pen"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger" onclick='excluirCanal(${canal.id})'>
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        ` : ""}
+      </div>
+    </div>
+  `;
   return col;
 }
 
