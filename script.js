@@ -1,43 +1,57 @@
 const API_BASE_URL = "https://cat-logo-backend.onrender.com";
 
-const tg = window.Telegram.WebApp;
+const tg = window.Telegram?.WebApp;
 if (!tg?.initDataUnsafe?.user) {
-  document.body.innerHTML = "<div class='container mt-5 text-center'><h3>Esta aplicação deve ser executada dentro do Telegram.</h3></div>";
+  document.body.innerHTML = `
+    <div class="container mt-5 text-center">
+      <h3>Esta aplicação deve ser executada dentro do Telegram.</h3>
+    </div>`;
   throw new Error("Acesso negado fora do Telegram");
 }
 
+Telegram.WebApp.ready();
 const user = tg.initDataUnsafe.user;
 const userId = user.id;
 const username = user.username || "sem_username";
 
-const isAdmin = async () => {
-  const res = await fetch(`${API_BASE_URL}/verificar-admin/${userId}`);
-  const data = await res.json();
-  return data.admin === true;
-};
+// Verifica se é admin consultando GET /admins
+async function isAdmin() {
+  const res = await fetch(`${API_BASE_URL}/admins`);
+  const admins = await res.json();
+  return Array.isArray(admins) && admins.includes(userId);
+}
 
-const carregarCanais = async () => {
-  const res = await fetch(`${API_BASE_URL}/listar`);
-  const canais = await res.json();
-  const container = document.getElementById("canal-lista");
-  container.innerHTML = "";
-  canais.forEach(c => {
-    const card = document.createElement("div");
-    card.className = "card p-3";
-    card.innerHTML = `
-      <h5>${c.nome}</h5>
-      <p class="mb-1"><strong>Categoria:</strong> ${c.categoria || "N/A"}</p>
-      <a href="${c.link}" target="_blank" class="btn btn-primary btn-sm">
-        <i class="fas fa-paper-plane"></i> Acessar Canal
-      </a>
-      ${c.imagem ? `<img src="${c.imagem}" class="image-preview mt-3" alt="Imagem do canal">` : ""}
-    `;
-    container.appendChild(card);
-  });
-  document.getElementById("loading").style.display = "none";
-};
+// Carrega e renderiza os canais via GET /channels
+async function carregarCanais() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/channels`);
+    const canais = await res.json();
+    const container = document.getElementById("canal-lista");
+    container.innerHTML = "";
+    canais.forEach(c => {
+      const card = document.createElement("div");
+      card.className = "card p-3";
+      card.innerHTML = `
+        <h5>${c.name}</h5>
+        <p class="mb-1"><strong>Categoria:</strong> ${c.description || "N/A"}</p>
+        <a href="${c.link}" target="_blank" class="btn btn-primary btn-sm">
+          <i class="fas fa-paper-plane"></i> Acessar Canal
+        </a>
+        ${c.image
+          ? `<img src="${c.image}" class="image-preview mt-3" alt="Imagem do canal">`
+          : ""}
+      `;
+      container.appendChild(card);
+    });
+  } catch (err) {
+    console.error("Erro ao carregar canais:", err);
+  } finally {
+    document.getElementById("loading").style.display = "none";
+  }
+}
 
-const previewImage = () => {
+// Preview de imagem antes do upload
+function previewImage() {
   const fileInput = document.getElementById("imagem-arquivo");
   const preview = document.getElementById("preview");
   const file = fileInput.files[0];
@@ -52,10 +66,11 @@ const previewImage = () => {
     preview.src = "";
     preview.classList.add("d-none");
   }
-};
+}
 
 document.getElementById("imagem-arquivo").addEventListener("change", previewImage);
 
+// Submissão de novo canal → POST /channels
 document.getElementById("add-channel-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const nome = document.getElementById("nome").value;
@@ -65,7 +80,6 @@ document.getElementById("add-channel-form").addEventListener("submit", async (e)
   const imagemFile = document.getElementById("imagem-arquivo").files[0];
 
   let imagemFinal = imagemUrl;
-
   if (imagemFile) {
     const formData = new FormData();
     formData.append("file", imagemFile);
@@ -74,21 +88,29 @@ document.getElementById("add-channel-form").addEventListener("submit", async (e)
     imagemFinal = result.url;
   }
 
-  await fetch(`${API_BASE_URL}/adicionar`, {
+  await fetch(`${API_BASE_URL}/channels`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ nome, link, categoria, imagem: imagemFinal })
+    body: JSON.stringify({
+      name: nome,
+      description: categoria,
+      link,
+      image: imagemFinal,
+      user_id: userId
+    })
   });
 
-  document.getElementById("add-channel-form").reset();
+  e.target.reset();
   document.getElementById("preview").classList.add("d-none");
   carregarCanais();
 });
 
+// Inicialização: só mostra o painel se for admin, depois carrega canais
 window.addEventListener("DOMContentLoaded", async () => {
   if (await isAdmin()) {
     document.getElementById("admin-panel").classList.remove("d-none");
-    document.getElementById("admin-info").textContent = `Conectado como admin: ${username} (ID: ${userId})`;
+    document.getElementById("admin-info").textContent =
+      `Conectado como admin: ${username} (ID: ${userId})`;
   }
   carregarCanais();
 });
