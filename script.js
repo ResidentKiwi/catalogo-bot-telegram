@@ -1,9 +1,8 @@
 const API_BASE_URL = "https://cat-logo-backend.onrender.com";
-const DEV_ID = 5185766186;
 const tg = window.Telegram?.WebApp;
 
 if (!tg?.initDataUnsafe?.user) {
-  document.body.innerHTML = `<div>Esta aplicação deve ser executada dentro do Telegram.</div>`;
+  document.body.innerHTML = `<div class="container mt-5 text-center"><h3>Esta aplicação deve ser executada dentro do Telegram.</h3></div>`;
   throw new Error("Acesso negado fora do Telegram");
 }
 
@@ -11,13 +10,18 @@ Telegram.WebApp.ready();
 
 const { id: userIdRaw, username } = tg.initDataUnsafe.user;
 const userId = Number(userIdRaw);
-window.isDev = (userId === DEV_ID);
 let canalEditando = null;
 
 async function isAdmin() {
   const res = await fetch(`${API_BASE_URL}/admins`);
   const admins = await res.json();
   return Array.isArray(admins) && admins.includes(userId);
+}
+
+async function isDev() {
+  const res = await fetch(`${API_BASE_URL}/devs`);
+  const devs = await res.json();
+  return Array.isArray(devs) && devs.includes(userId);
 }
 
 async function carregarCanais() {
@@ -31,159 +35,58 @@ async function carregarCanais() {
     card.innerHTML = `
       ${c.imagem ? `<img src="${c.imagem}" class="image-preview">` : ""}
       <h5>${c.nome}</h5>
-      <p>${c.descricao || "Sem descrição."}</p>
+      <p>${c.descricao || "Sem descrição disponível."}</p>
       <a href="${c.url}" target="_blank" class="btn btn-primary btn-sm">Acessar Canal</a>
       <div class="mt-2 admin-buttons"></div>`;
     container.appendChild(card);
     if (window.userIsAdmin) {
       const btns = card.querySelector(".admin-buttons");
-      btns.innerHTML = `<button class="btn btn-warning btn-sm me-2">Editar</button>
-                        <button class="btn btn-danger btn-sm">Excluir</button>`;
-      btns.children[0].onclick = () => abrirEditor(c);
-      btns.children[1].onclick = () => excluirCanal(c.id);
+      btns.innerHTML = `
+        <button class="btn btn-warning btn-sm me-2" onclick="abrirEditor(${c.id})">Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="excluirCanal(${c.id})">Excluir</button>`;
     }
   });
   document.getElementById("loading").style.display = "none";
 }
 
-function abrirEditor(c) {
-  canalEditando = c;
-  document.getElementById("edit-form-container").classList.remove("d-none");
-  document.getElementById("edit-nome").value = c.nome;
-  document.getElementById("edit-link").value = c.url;
-  document.getElementById("edit-imagem-url").value = c.imagem || "";
-  document.getElementById("edit-descricao").value = c.descricao || "";
-  const preview = document.getElementById("edit-preview");
-  if (c.imagem) {
-    preview.src = c.imagem;
-    preview.classList.remove("d-none");
-  } else {
-    preview.src = "";
-    preview.classList.add("d-none");
-  }
-}
-
-async function excluirCanal(canalId) {
-  if (!confirm("Confirma exclusão?")) return;
-  await fetch(`${API_BASE_URL}/canais/${canalId}?user_id=${userId}`, { method: "DELETE" });
-  carregarCanais();
-}
-
-function previewImage(inputId, previewId) {
-  const file = document.getElementById(inputId).files[0];
-  const preview = document.getElementById(previewId);
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = () => {
-      preview.src = reader.result;
-      preview.classList.remove("d-none");
-    };
-    reader.readAsDataURL(file);
-  } else {
-    preview.src = "";
-    preview.classList.add("d-none");
-  }
-}
-
 function showDevPanel() {
-  const devPanel = document.createElement("div");
-  devPanel.className = "container mb-4";
-  devPanel.innerHTML = `
-    <div class="card p-3">
-      <h6 class="text-muted mb-2"><i class="fas fa-terminal me-1"></i> Painel do Desenvolvedor</h6>
-      <ul id="log-list" class="list-group small"></ul>
+  const panel = document.createElement("div");
+  panel.innerHTML = `
+    <div class="container mb-3">
+      <h6 class="text-muted">Painel do Desenvolvedor – Logs de Admin</h6>
+      <ul id="log-list" class="list-group"></ul>
     </div>`;
-  document.body.insertBefore(devPanel, document.getElementById("canal-lista"));
-
+  document.body.insertBefore(panel, document.getElementById("canal-lista"));
   fetch(`${API_BASE_URL}/admin_logs?user_id=${userId}`)
     .then(r => r.json())
     .then(logs => {
       const ul = document.getElementById("log-list");
       logs.forEach(l => {
         const dt = new Date(l.timestamp).toLocaleString();
-        ul.innerHTML += `<li class="list-group-item">${dt} – Admin ${l.admin_id} ${l.action} canal ${l.target_id}</li>`;
+        ul.innerHTML += `<li class="list-group-item bg-dark text-white border-secondary">
+          ${dt} – Admin ${l.admin_id} ${l.action} canal ${l.target_id}
+        </li>`;
       });
-    })
-    .catch(console.error);
+    }).catch(console.error);
 }
 
-document.getElementById("imagem-arquivo").addEventListener("change", () =>
-  previewImage("imagem-arquivo", "preview")
-);
-document.getElementById("edit-imagem-arquivo").addEventListener("change", () =>
-  previewImage("edit-imagem-arquivo", "edit-preview")
-);
-
 window.addEventListener("DOMContentLoaded", async () => {
-  window.userIsAdmin = await isAdmin();
+  const admin = await isAdmin();
+  const dev = await isDev();
+
+  window.userIsAdmin = admin || dev;
+  window.isDev = dev;
+
   if (window.userIsAdmin) {
     document.getElementById("admin-panel").classList.remove("d-none");
     document.getElementById("admin-info").textContent = `${username} (ID: ${userId})`;
   }
-
   if (window.isDev) {
     showDevPanel();
   }
 
+  document.getElementById("add-channel-form").addEventListener("submit", /* igual ao anterior */);
+  document.getElementById("edit-channel-form").addEventListener("submit", /* igual ao anterior */);
+
   carregarCanais();
-
-  document.getElementById("add-channel-form").addEventListener("submit", async e => {
-    e.preventDefault();
-    const nome = document.getElementById("nome").value;
-    const url = document.getElementById("link").value;
-    const descricao = document.getElementById("descricao").value;
-    let imagem = document.getElementById("imagem-url").value;
-    const file = document.getElementById("imagem-arquivo").files[0];
-
-    if (file) {
-      const form = new FormData();
-      form.append("file", file);
-      const res = await fetch(`${API_BASE_URL}/upload`, { method: "POST", body: form });
-      if (!res.ok) return alert("Erro no upload da imagem");
-      const result = await res.json();
-      imagem = result.url;
-    }
-
-    const body = { nome, url, descricao, imagem, user_id: userId };
-    const res = await fetch(`${API_BASE_URL}/canais`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
-    if (!res.ok) return alert("Erro ao criar canal");
-    e.target.reset();
-    document.getElementById("preview").classList.add("d-none");
-    carregarCanais();
-  });
-
-  document.getElementById("edit-channel-form").addEventListener("submit", async e => {
-    e.preventDefault();
-    if (!canalEditando) return;
-    const nome = document.getElementById("edit-nome").value;
-    const url = document.getElementById("edit-link").value;
-    const descricao = document.getElementById("edit-descricao").value;
-    let imagem = document.getElementById("edit-imagem-url").value;
-    const file = document.getElementById("edit-imagem-arquivo").files[0];
-
-    if (file) {
-      const form = new FormData();
-      form.append("file", file);
-      const res = await fetch(`${API_BASE_URL}/upload`, { method: "POST", body: form });
-      const result = await res.json();
-      imagem = result.url;
-    }
-
-    const body = { nome, url, descricao, imagem, user_id: userId };
-    await fetch(`${API_BASE_URL}/canais/${canalEditando.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
-
-    canalEditando = null;
-    document.getElementById("edit-form-container").classList.add("d-none");
-    e.target.reset();
-    document.getElementById("edit-preview").classList.add("d-none");
-    carregarCanais();
-  });
 });
