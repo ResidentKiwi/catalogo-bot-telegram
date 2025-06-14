@@ -117,11 +117,20 @@ document.getElementById("add-channel-form").addEventListener("submit", async e =
   }
 
   const body = { nome, url, descricao, imagem, user_id: userId };
-  await fetch(`${API_BASE_URL}/canais`, {
+  console.log("Payload sendo enviado:", body);
+
+  const res = await fetch(`${API_BASE_URL}/canais`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body)
   });
+
+  console.log("Resposta da API:", res.status);
+  if (!res.ok) {
+    const erro = await res.text();
+    console.error("Erro ao criar canal:", erro);
+    return;
+  }
 
   e.target.reset();
   document.getElementById("preview").classList.add("d-none");
