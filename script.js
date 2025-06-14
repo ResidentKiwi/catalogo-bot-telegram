@@ -1,40 +1,15 @@
 const API_BASE_URL = "https://cat-logo-backend.onrender.com";
 const tg = window.Telegram?.WebApp;
 
-// Debug visual
-function log(msg) {
-  let el = document.getElementById("debug-log");
-  if (!el) {
-    el = document.createElement("div");
-    el.id = "debug-log";
-    el.style.position = "fixed";
-    el.style.top = "0";
-    el.style.left = "0";
-    el.style.right = "0";
-    el.style.zIndex = "9999";
-    el.style.background = "#222";
-    el.style.color = "#0f0";
-    el.style.fontSize = "12px";
-    el.style.padding = "0.5rem";
-    el.style.maxHeight = "200px";
-    el.style.overflowY = "auto";
-    document.body.appendChild(el);
-  }
-  el.innerHTML += `<div>> ${msg}</div>`;
-}
-
-log("✅ script.js carregado");
-
 if (!tg?.initDataUnsafe?.user) {
   document.body.innerHTML = `<div class="container mt-5 text-center"><h3>Esta aplicação deve ser executada dentro do Telegram.</h3></div>`;
-  log("❌ Acesso negado fora do Telegram");
   throw new Error("Acesso negado fora do Telegram");
 }
 
 Telegram.WebApp.ready();
-log("✅ Telegram WebApp pronto");
 
-const { id: userId, username } = tg.initDataUnsafe.user;
+const { id: userIdRaw, username } = tg.initDataUnsafe.user;
+const userId = Number(userIdRaw); // ✅ Convertido para número
 let canalEditando = null;
 
 async function isAdmin() {
@@ -51,6 +26,7 @@ async function carregarCanais() {
   canais.forEach(c => {
     const card = document.createElement("div");
     card.className = "card";
+
     card.innerHTML = `
       ${c.imagem ? `<img src="${c.imagem}" class="image-preview" alt="Imagem do canal">` : ""}
       <h5>${c.nome}</h5>
@@ -60,6 +36,7 @@ async function carregarCanais() {
       </a>
       <div class="mt-2 admin-buttons"></div>
     `;
+
     container.appendChild(card);
 
     if (window.userIsAdmin) {
@@ -117,6 +94,7 @@ async function excluirCanal(canalId) {
 document.getElementById("imagem-arquivo").addEventListener("change", () =>
   previewImage("imagem-arquivo", "preview")
 );
+
 document.getElementById("edit-imagem-arquivo").addEventListener("change", () =>
   previewImage("edit-imagem-arquivo", "edit-preview")
 );
@@ -126,13 +104,9 @@ window.addEventListener("DOMContentLoaded", async () => {
   if (window.userIsAdmin) {
     document.getElementById("admin-panel").classList.remove("d-none");
     document.getElementById("admin-info").textContent = `${username} (ID: ${userId})`;
-    log("🔑 Admin detectado");
-  } else {
-    log("🔒 Usuário não é admin");
   }
 
   document.getElementById("add-channel-form").addEventListener("submit", async e => {
-    log("📩 Submissão do formulário de novo canal");
     e.preventDefault();
 
     const nome = document.getElementById("nome").value;
@@ -142,43 +116,35 @@ window.addEventListener("DOMContentLoaded", async () => {
     const file = document.getElementById("imagem-arquivo").files[0];
 
     if (file) {
-      log("📷 Upload de imagem iniciado");
       const form = new FormData();
       form.append("file", file);
-      try {
-        const res = await fetch(`${API_BASE_URL}/upload`, { method: "POST", body: form });
-        const result = await res.json();
-        imagem = result.url;
-        log("✅ Upload concluído");
-      } catch (err) {
-        log("❌ Falha no upload de imagem");
+      const res = await fetch(`${API_BASE_URL}/upload`, { method: "POST", body: form });
+      if (!res.ok) {
+        alert("Erro no upload da imagem");
         return;
       }
+      const result = await res.json();
+      imagem = result.url;
     }
 
     const body = { nome, url, descricao, imagem, user_id: userId };
-    log("📤 Enviando dados: " + JSON.stringify(body));
+    console.log("🔼 Enviando canal:", body);
 
-    try {
-      const res = await fetch(`${API_BASE_URL}/canais`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      });
+    const res = await fetch(`${API_BASE_URL}/canais`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
 
-      if (!res.ok) {
-        const errorText = await res.text();
-        log(`❌ Erro ${res.status}: ${errorText}`);
-        return;
-      }
-
-      log("✅ Canal criado com sucesso");
-      e.target.reset();
-      document.getElementById("preview").classList.add("d-none");
-      carregarCanais();
-    } catch (err) {
-      log("❌ Erro ao enviar canal: " + err.message);
+    if (!res.ok) {
+      const erro = await res.text();
+      alert(`❌ Erro ao criar canal (${res.status}): ${erro}`);
+      return;
     }
+
+    e.target.reset();
+    document.getElementById("preview").classList.add("d-none");
+    carregarCanais();
   });
 
   document.getElementById("edit-channel-form").addEventListener("submit", async e => {
@@ -200,7 +166,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
 
     const body = { nome, url, descricao, imagem, user_id: userId };
-
     await fetch(`${API_BASE_URL}/canais/${canalEditando.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
