@@ -9,7 +9,7 @@ if (!tg?.initDataUnsafe?.user) {
 Telegram.WebApp.ready();
 
 const { id: userIdRaw, username } = tg.initDataUnsafe.user;
-const userId = Number(userIdRaw); // ✅ Convertido para número
+const userId = Number(userIdRaw); // ✅ Convertido para número 
 let canalEditando = null;
 
 async function isAdmin() {
