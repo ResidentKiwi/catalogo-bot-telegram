@@ -46,11 +46,54 @@ async function carregarCanais() {
   document.getElementById("loading").style.display = "none";
 }
 
+function abrirEditor(c) {
+  canalEditando = c;
+  document.getElementById("edit-form-container").classList.remove("d-none");
+  document.getElementById("edit-nome").value = c.nome;
+  document.getElementById("edit-link").value = c.url;
+  document.getElementById("edit-imagem-url").value = c.imagem || "";
+  document.getElementById("edit-descricao").value = c.descricao || "";
+  const preview = document.getElementById("edit-preview");
+  if (c.imagem) {
+    preview.src = c.imagem;
+    preview.classList.remove("d-none");
+  } else {
+    preview.src = "";
+    preview.classList.add("d-none");
+  }
+}
+
+async function excluirCanal(canalId) {
+  if (!confirm("Confirma exclusão?")) return;
+  await fetch(`${API_BASE_URL}/canais/${canalId}?user_id=${userId}`, { method: "DELETE" });
+  carregarCanais();
+}
+
+function previewImage(inputId, previewId) {
+  const file = document.getElementById(inputId).files[0];
+  const preview = document.getElementById(previewId);
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      preview.src = reader.result;
+      preview.classList.remove("d-none");
+    };
+    reader.readAsDataURL(file);
+  } else {
+    preview.src = "";
+    preview.classList.add("d-none");
+  }
+}
+
 function showDevPanel() {
-  const panel = document.createElement("div");
-  panel.innerHTML = `<div class="container mb-3">
-    <h6>Painel Dev – Logs de Admin</h6><ul id="log-list" class="list-group"></ul></div>`;
-  document.body.insertBefore(panel, document.getElementById("canal-lista"));
+  const devPanel = document.createElement("div");
+  devPanel.className = "container mb-4";
+  devPanel.innerHTML = `
+    <div class="card p-3">
+      <h6 class="text-muted mb-2"><i class="fas fa-terminal me-1"></i> Painel do Desenvolvedor</h6>
+      <ul id="log-list" class="list-group small"></ul>
+    </div>`;
+  document.body.insertBefore(devPanel, document.getElementById("canal-lista"));
 
   fetch(`${API_BASE_URL}/admin_logs?user_id=${userId}`)
     .then(r => r.json())
@@ -60,8 +103,16 @@ function showDevPanel() {
         const dt = new Date(l.timestamp).toLocaleString();
         ul.innerHTML += `<li class="list-group-item">${dt} – Admin ${l.admin_id} ${l.action} canal ${l.target_id}</li>`;
       });
-    }).catch(console.error);
+    })
+    .catch(console.error);
 }
+
+document.getElementById("imagem-arquivo").addEventListener("change", () =>
+  previewImage("imagem-arquivo", "preview")
+);
+document.getElementById("edit-imagem-arquivo").addEventListener("change", () =>
+  previewImage("edit-imagem-arquivo", "edit-preview")
+);
 
 window.addEventListener("DOMContentLoaded", async () => {
   window.userIsAdmin = await isAdmin();
@@ -69,17 +120,70 @@ window.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("admin-panel").classList.remove("d-none");
     document.getElementById("admin-info").textContent = `${username} (ID: ${userId})`;
   }
-  if (window.isDev) showDevPanel();
+
+  if (window.isDev) {
+    showDevPanel();
+  }
+
+  carregarCanais();
 
   document.getElementById("add-channel-form").addEventListener("submit", async e => {
     e.preventDefault();
-    // ... mesmo código de envio/formatação ...
+    const nome = document.getElementById("nome").value;
+    const url = document.getElementById("link").value;
+    const descricao = document.getElementById("descricao").value;
+    let imagem = document.getElementById("imagem-url").value;
+    const file = document.getElementById("imagem-arquivo").files[0];
+
+    if (file) {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch(`${API_BASE_URL}/upload`, { method: "POST", body: form });
+      if (!res.ok) return alert("Erro no upload da imagem");
+      const result = await res.json();
+      imagem = result.url;
+    }
+
+    const body = { nome, url, descricao, imagem, user_id: userId };
+    const res = await fetch(`${API_BASE_URL}/canais`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) return alert("Erro ao criar canal");
+    e.target.reset();
+    document.getElementById("preview").classList.add("d-none");
+    carregarCanais();
   });
 
   document.getElementById("edit-channel-form").addEventListener("submit", async e => {
     e.preventDefault();
-    // ... mesmo código de edição ...
-  });
+    if (!canalEditando) return;
+    const nome = document.getElementById("edit-nome").value;
+    const url = document.getElementById("edit-link").value;
+    const descricao = document.getElementById("edit-descricao").value;
+    let imagem = document.getElementById("edit-imagem-url").value;
+    const file = document.getElementById("edit-imagem-arquivo").files[0];
 
-  carregarCanais();
+    if (file) {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch(`${API_BASE_URL}/upload`, { method: "POST", body: form });
+      const result = await res.json();
+      imagem = result.url;
+    }
+
+    const body = { nome, url, descricao, imagem, user_id: userId };
+    await fetch(`${API_BASE_URL}/canais/${canalEditando.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+
+    canalEditando = null;
+    document.getElementById("edit-form-container").classList.add("d-none");
+    e.target.reset();
+    document.getElementById("edit-preview").classList.add("d-none");
+    carregarCanais();
+  });
 });
