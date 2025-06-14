@@ -99,82 +99,84 @@ document.getElementById("edit-imagem-arquivo").addEventListener("change", () =>
   previewImage("edit-imagem-arquivo", "edit-preview")
 );
 
-document.getElementById("add-channel-form").addEventListener("submit", async e => {
-  e.preventDefault();
-
-  const nome = document.getElementById("nome").value;
-  const url = document.getElementById("link").value;
-  const descricao = document.getElementById("descricao").value;
-  let imagem = document.getElementById("imagem-url").value;
-  const file = document.getElementById("imagem-arquivo").files[0];
-
-  if (file) {
-    const form = new FormData();
-    form.append("file", file);
-    const res = await fetch(`${API_BASE_URL}/upload`, { method: "POST", body: form });
-    const result = await res.json();
-    imagem = result.url;
-  }
-
-  const body = { nome, url, descricao, imagem, user_id: userId };
-  console.log("Payload sendo enviado:", body);
-
-  const res = await fetch(`${API_BASE_URL}/canais`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  });
-
-  console.log("Resposta da API:", res.status);
-  if (!res.ok) {
-    const erro = await res.text();
-    console.error("Erro ao criar canal:", erro);
-    return;
-  }
-
-  e.target.reset();
-  document.getElementById("preview").classList.add("d-none");
-  carregarCanais();
-});
-
-document.getElementById("edit-channel-form").addEventListener("submit", async e => {
-  e.preventDefault();
-  if (!canalEditando) return;
-
-  const nome = document.getElementById("edit-nome").value;
-  const url = document.getElementById("edit-link").value;
-  const descricao = document.getElementById("edit-descricao").value;
-  let imagem = document.getElementById("edit-imagem-url").value;
-  const file = document.getElementById("edit-imagem-arquivo").files[0];
-
-  if (file) {
-    const form = new FormData();
-    form.append("file", file);
-    const res = await fetch(`${API_BASE_URL}/upload`, { method: "POST", body: form });
-    const result = await res.json();
-    imagem = result.url;
-  }
-
-  const body = { nome, url, descricao, imagem, user_id: userId };
-
-  await fetch(`${API_BASE_URL}/canais/${canalEditando.id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  });
-
-  canalEditando = null;
-  document.getElementById("edit-form-container").classList.add("d-none");
-  e.target.reset();
-  document.getElementById("edit-preview").classList.add("d-none");
-  carregarCanais();
-});
-
 window.addEventListener("DOMContentLoaded", async () => {
   window.userIsAdmin = await isAdmin();
   if (window.userIsAdmin) {
     document.getElementById("admin-panel").classList.remove("d-none");
     document.getElementById("admin-info").textContent = `${username} (ID: ${userId})`;
   }
+
+  document.getElementById("add-channel-form").addEventListener("submit", async e => {
+    console.log("Form submit acionado");
+    e.preventDefault();
+
+    const nome = document.getElementById("nome").value;
+    const url = document.getElementById("link").value;
+    const descricao = document.getElementById("descricao").value;
+    let imagem = document.getElementById("imagem-url").value;
+    const file = document.getElementById("imagem-arquivo").files[0];
+
+    if (file) {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch(`${API_BASE_URL}/upload`, { method: "POST", body: form });
+      const result = await res.json();
+      imagem = result.url;
+    }
+
+    const body = { nome, url, descricao, imagem, user_id: userId };
+    console.log("Payload sendo enviado:", body);
+
+    const res = await fetch(`${API_BASE_URL}/canais`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+
+    console.log("Resposta da API:", res.status);
+    if (!res.ok) {
+      const erro = await res.text();
+      console.error("Erro ao criar canal:", erro);
+      return;
+    }
+
+    e.target.reset();
+    document.getElementById("preview").classList.add("d-none");
+    carregarCanais();
+  });
+
+  document.getElementById("edit-channel-form").addEventListener("submit", async e => {
+    e.preventDefault();
+    if (!canalEditando) return;
+
+    const nome = document.getElementById("edit-nome").value;
+    const url = document.getElementById("edit-link").value;
+    const descricao = document.getElementById("edit-descricao").value;
+    let imagem = document.getElementById("edit-imagem-url").value;
+    const file = document.getElementById("edit-imagem-arquivo").files[0];
+
+    if (file) {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch(`${API_BASE_URL}/upload`, { method: "POST", body: form });
+      const result = await res.json();
+      imagem = result.url;
+    }
+
+    const body = { nome, url, descricao, imagem, user_id: userId };
+
+    await fetch(`${API_BASE_URL}/canais/${canalEditando.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+
+    canalEditando = null;
+    document.getElementById("edit-form-container").classList.add("d-none");
+    e.target.reset();
+    document.getElementById("edit-preview").classList.add("d-none");
+    carregarCanais();
+  });
+
   carregarCanais();
 });
